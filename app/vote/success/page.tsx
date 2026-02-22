@@ -13,7 +13,7 @@ import {
 
 export default function VoteSuccessPage() {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(19);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -46,17 +46,18 @@ export default function VoteSuccessPage() {
             Thank you for participating in the election. Your selections have
             been securely saved.
           </p>
+          <div className="rounded-lg border border-dashed p-4">
+            <p className="text-sm font-medium text-muted-foreground">
+              If you believe there was an error, please contact your election
+              administrator.
+            </p>
+          </div>
+
           <p className="text-sm text-muted-foreground">
             Redirecting to login in{" "}
             <span className="font-semibold">{countdown}</span> second
             {countdown !== 1 ? "s" : ""}…
           </p>
-          <div className="rounded-lg border border-dashed p-4">
-            <p className="text-xs text-muted-foreground">
-              If you believe there was an error, please contact your election
-              administrator.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

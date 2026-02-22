@@ -165,7 +165,7 @@ export function BallotForm({ election }: { election: Election }) {
               No candidates for this position.
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-wrap justify-center gap-x-8 gap-4">
               {position.candidates.map((candidate) => {
                 const isSelected = selected.has(candidate.id);
                 const hasLongDesc =
@@ -173,7 +173,7 @@ export function BallotForm({ election }: { election: Election }) {
                   candidate.description.length > DESC_TRUNCATE_LENGTH;
 
                 return (
-                  <div key={candidate.id} className="relative">
+                  <div key={candidate.id} className="relative w-88 p-2">
                     <button
                       type="button"
                       onClick={() =>
@@ -183,7 +183,7 @@ export function BallotForm({ election }: { election: Election }) {
                           position.maxVotes,
                         )
                       }
-                      className={`flex w-full flex-col items-center rounded-lg border p-5 pb-6 text-center transition-colors ${
+                      className={`flex h-full w-full flex-col items-center rounded-lg border p-5 pb-6 text-center transition-colors ${
                         isSelected
                           ? "border-primary bg-primary/5 ring-2 ring-primary"
                           : "border-border hover:bg-muted/50"
@@ -191,7 +191,7 @@ export function BallotForm({ election }: { election: Election }) {
                     >
                       {/* Selection indicator */}
                       {isSelected && (
-                        <CheckCircle2 className="absolute top-2 right-2 size-5 text-primary" />
+                        <CheckCircle2 className="absolute top-4 right-4 size-6 text-primary" />
                       )}
 
                       {/* Square image */}
@@ -204,7 +204,7 @@ export function BallotForm({ election }: { election: Election }) {
                           className="mb-3 size-64 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="mb-3 flex size-36 shrink-0 items-center justify-center rounded-lg bg-muted text-3xl font-semibold">
+                        <div className="mb-3 flex size-64 shrink-0 items-center justify-center rounded-lg bg-muted text-3xl font-semibold">
                           {candidate.fullName
                             .split(" ")
                             .map((w) => w[0])
@@ -244,19 +244,16 @@ export function BallotForm({ election }: { election: Election }) {
                         </p>
                       )}
 
-                      {/* "Read more" inline within the button */}
-                      {hasLongDesc && (
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDescCandidate(candidate);
-                          }}
-                          className="mt-4 inline-flex items-center gap-1 text-xs font-medium hover:underline"
-                        >
-                          <Info className="size-4" />
-                          Read more
-                        </Button>
-                      )}
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDescCandidate(candidate);
+                        }}
+                        className="mt-4 inline-flex items-center gap-1 text-xs font-medium hover:underline"
+                      >
+                        <Info className="size-4" />
+                        Read more
+                      </Button>
                     </button>
                   </div>
                 );
@@ -276,7 +273,7 @@ export function BallotForm({ election }: { election: Election }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Review Your Ballot</CardTitle>
+          <CardTitle className="text-2xl font-bold">Review Your Ballot</CardTitle>
           <CardDescription>
             Review your selections before submitting. {filledPositions}/
             {election.positions.length} positions filled.
@@ -292,7 +289,7 @@ export function BallotForm({ election }: { election: Election }) {
                   onClick={() =>
                     setPage(election.positions.indexOf(item.position))
                   }
-                  className="text-xs text-primary hover:underline"
+                  className="text-sm text-primary font-medium cursor-pointer hover:underline"
                 >
                   Change
                 </button>
@@ -344,7 +341,7 @@ export function BallotForm({ election }: { election: Election }) {
   // ── Main render ────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 pb-28 pt-16">
+    <div className="mx-auto px-24 max-w-screen space-y-6 pb-28 pt-16">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-2xl font-bold">{election.name}</h1>
