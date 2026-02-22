@@ -1,11 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Users, BarChart3, RefreshCw, Trophy, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { Users, BarChart3, RefreshCw, Trophy } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  Label,
+  PolarGrid,
+  PolarRadiusAxis,
+  RadialBar,
+  RadialBarChart,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -20,7 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 
 import { getElectionResults, getSectionTurnout } from "@/actions/results";
 
@@ -68,6 +85,22 @@ type TurnoutData = {
     turnoutPercent: number;
   };
 };
+
+const COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(210, 70%, 55%)",
+  "hsl(280, 60%, 55%)",
+  "hsl(30, 80%, 55%)",
+];
+
+const turnoutChartConfig = {
+  voted: { label: "Voted", color: "hsl(var(--chart-1))" },
+  notVoted: { label: "Not Voted", color: "hsl(var(--muted))" },
+} satisfies ChartConfig;
 
 export function ResultsDashboard({
   elections,
@@ -173,9 +206,9 @@ export function ResultsDashboard({
         </div>
       </div>
 
-      {/* Turnout overview cards */}
+      {/* Top row: stat cards + turnout pie */}
       {turnout && (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total Voters</CardDescription>
@@ -206,95 +239,184 @@ export function ResultsDashboard({
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Overall Turnout</CardDescription>
+              <CardDescription>Positions</CardDescription>
               <CardTitle className="text-3xl">
-                {turnout.overall.turnoutPercent}%
+                {results?.positions.length ?? 0}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Progress
-                value={turnout.overall.turnoutPercent}
-                className="h-2"
-              />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Trophy className="size-4" />
+                Being contested
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Overall Turnout</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0 pb-4">
+              <ChartContainer
+                config={turnoutChartConfig}
+                className="mx-auto aspect-square h-32"
+              >
+                <RadialBarChart
+                  data={[
+                    {
+                      value: turnout.overall.turnoutPercent,
+                      fill: "hsl(var(--chart-1))",
+                    },
+                  ]}
+                  startAngle={90}
+                  endAngle={
+                    90 -
+                    (turnout.overall.turnoutPercent / 100) * 360
+                  }
+                  innerRadius={40}
+                  outerRadius={56}
+                >
+                  <PolarGrid
+                    gridType="circle"
+                    radialLines={false}
+                    stroke="none"
+                    className="first:fill-muted last:fill-background"
+                    polarRadius={[56, 40]}
+                  />
+                  <RadialBar
+                    dataKey="value"
+                    cornerRadius={5}
+                    background={false}
+                  />
+                  <PolarRadiusAxis
+                    tick={false}
+                    tickLine={false}
+                    axisLine={false}
+                  >
+                    <Label
+                      content={({ viewBox }) => {
+                        if (
+                          viewBox &&
+                          "cx" in viewBox &&
+                          "cy" in viewBox
+                        ) {
+                          return (
+                            <text
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                            >
+                              <tspan
+                                x={viewBox.cx}
+                                y={viewBox.cy}
+                                className="fill-foreground text-2xl font-bold"
+                              >
+                                {turnout.overall.turnoutPercent}%
+                              </tspan>
+                            </text>
+                          );
+                        }
+                      }}
+                    />
+                  </PolarRadiusAxis>
+                </RadialBarChart>
+              </ChartContainer>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Leading candidates per position (compact overview) */}
+      {/* Per-position results */}
       {results && (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           {results.positions.map((position) => {
-            const leader = position.candidates[0];
-            const runnerUp = position.candidates[1];
-
+            const topVotes = Math.max(
+              ...position.candidates.map((c) => c.votes),
+              1,
+            );
             return (
               <Card key={position.id}>
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">
-                      {position.name}
-                    </CardTitle>
-                    <Badge variant="outline" className="text-xs">
-                      {position.totalVotes} vote
-                      {position.totalVotes !== 1 ? "s" : ""}
-                    </Badge>
+                    <div>
+                      <CardTitle className="text-base">
+                        {position.name}
+                      </CardTitle>
+                      <CardDescription>
+                        {position.totalVotes} vote
+                        {position.totalVotes !== 1 ? "s" : ""} cast
+                        {position.maxVotes > 1 &&
+                          ` · Top ${position.maxVotes} win`}
+                      </CardDescription>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {leader ? (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <Trophy className="size-5 text-yellow-500" />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold">
-                              {leader.fullName}
-                            </span>
-                            <span className="text-sm font-medium tabular-nums">
-                              {leader.votes}
-                            </span>
-                          </div>
-                          <div className="mt-1 flex items-center gap-2">
-                            <Progress
-                              value={
-                                position.totalVotes > 0
-                                  ? (leader.votes / position.totalVotes) * 100
-                                  : 0
-                              }
-                              className="h-1.5 flex-1"
-                            />
-                            <span className="text-xs text-muted-foreground">
-                              {position.totalVotes > 0
-                                ? Math.round(
-                                    (leader.votes / position.totalVotes) * 100,
-                                  )
-                                : 0}
-                              %
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      {runnerUp && (
-                        <div className="flex items-center gap-3 text-muted-foreground">
-                          <span className="flex size-5 items-center justify-center text-xs font-medium">
-                            2
-                          </span>
-                          <div className="flex flex-1 items-center justify-between">
-                            <span className="text-sm">
-                              {runnerUp.fullName}
-                            </span>
-                            <span className="text-sm tabular-nums">
-                              {runnerUp.votes}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  ) : (
+                <CardContent>
+                  {position.candidates.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      No candidates
+                      No candidates for this position.
                     </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {position.candidates.map((c, i) => {
+                        const pct =
+                          topVotes > 0
+                            ? (c.votes / topVotes) * 100
+                            : 0;
+                        const color =
+                          c.partylist.color ??
+                          COLORS[i % COLORS.length];
+                        return (
+                          <div
+                            key={c.id}
+                            className="flex items-center gap-3"
+                          >
+                            <div className="relative size-9 shrink-0 overflow-hidden rounded-full bg-muted">
+                              {c.imageUrl ? (
+                                <Image
+                                  src={c.imageUrl}
+                                  alt={c.fullName}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="flex size-full items-center justify-center text-xs font-semibold text-muted-foreground">
+                                  {c.fullName
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .slice(0, 2)}
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-1 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 truncate">
+                                  <span className="truncate text-sm font-medium">
+                                    {c.fullName}
+                                  </span>
+                                  {c.isWinner && (
+                                    <Trophy className="size-3.5 shrink-0 text-yellow-500" />
+                                  )}
+                                </div>
+                                <span className="ml-2 shrink-0 text-sm font-semibold tabular-nums">
+                                  {c.votes}
+                                </span>
+                              </div>
+                              <div className="h-2.5 w-full rounded-full bg-muted/50">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500"
+                                  style={{
+                                    width: `${Math.max(pct, 2)}%`,
+                                    backgroundColor: color,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -303,41 +425,66 @@ export function ResultsDashboard({
         </div>
       )}
 
-      {/* Quick links */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Link href="/dashboard/results/votes">
-          <Card className="transition-colors hover:bg-muted/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Trophy className="size-4" />
-                Detailed Vote Counts
-                <ArrowRight className="ml-auto size-4" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Full ranked results for every position with vote percentages.
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/dashboard/results/turnout">
-          <Card className="transition-colors hover:bg-muted/50">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Users className="size-4" />
-                Voter Turnout by Section
-                <ArrowRight className="ml-auto size-4" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Per-section breakdown of voter participation and turnout rates.
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
+      {/* Section turnout bar chart */}
+      {turnout && turnout.sections.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Turnout by Section
+            </CardTitle>
+            <CardDescription>
+              Voter participation rate per section
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={turnoutChartConfig}
+              className="h-[calc(2.5rem*var(--bar-count)+2rem)]"
+              style={
+                {
+                  "--bar-count": turnout.sections.length,
+                } as React.CSSProperties
+              }
+            >
+              <BarChart
+                data={turnout.sections.map((s) => ({
+                  name: s.name,
+                  voted: s.votedCount,
+                  notVoted: s.notVotedCount,
+                }))}
+                layout="vertical"
+                margin={{ left: 0, right: 16, top: 0, bottom: 0 }}
+              >
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tickLine={false}
+                  axisLine={false}
+                  width={100}
+                  tick={{ fontSize: 12 }}
+                />
+                <XAxis type="number" hide />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar
+                  dataKey="voted"
+                  stackId="a"
+                  fill="hsl(var(--chart-1))"
+                  radius={[0, 0, 0, 0]}
+                  barSize={24}
+                />
+                <Bar
+                  dataKey="notVoted"
+                  stackId="a"
+                  fill="hsl(var(--muted))"
+                  radius={[0, 4, 4, 0]}
+                  barSize={24}
+                />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
