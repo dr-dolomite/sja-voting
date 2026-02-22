@@ -1,10 +1,8 @@
 import Link from "next/link";
 import {
   Users,
-  Vote,
   Trophy,
   Flag,
-  UserPlus,
   BarChart3,
   AlertTriangle,
   ShieldAlert,
@@ -24,7 +22,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getDashboardStats } from "@/actions/dashboard";
-import type { DashboardStats, RecentLog } from "@/actions/dashboard";
 
 function formatAction(action: string) {
   return action
@@ -122,17 +119,17 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Voter Pool */}
         <Card className="relative overflow-hidden border-0 shadow-sm">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 size-24 rounded-full bg-blue-500/5" />
-          <CardHeader className="pb-2">
+          <div className="absolute top-0 right-0 -mt-2 -mr-4 size-24 rounded-full bg-blue-500/5" />
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <CardDescription className="text-xs font-medium uppercase tracking-wider">
+              <CardDescription className="text-sm font-semibold uppercase tracking-wider">
                 Voters
               </CardDescription>
-              <div className="flex size-9 items-center justify-center rounded-lg bg-blue-500/10">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-blue-500/10 -mr-2">
                 <Users className="size-4 text-blue-500" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold tabular-nums">
+            <CardTitle className="text-5xl font-bold tabular-nums">
               {stats.totalVoters}
             </CardTitle>
           </CardHeader>
@@ -143,9 +140,7 @@ export default async function DashboardPage() {
                   <span>{stats.totalVoted} voted</span>
                   <span>
                     {stats.totalVoters > 0
-                      ? Math.round(
-                          (stats.totalVoted / stats.totalVoters) * 100,
-                        )
+                      ? Math.round((stats.totalVoted / stats.totalVoters) * 100)
                       : 0}
                     %
                   </span>
@@ -185,9 +180,7 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">
-              Running for office
-            </p>
+            <p className="text-xs text-muted-foreground">Running for office</p>
           </CardContent>
         </Card>
 
@@ -222,9 +215,7 @@ export default async function DashboardPage() {
               </CardDescription>
               <div
                 className={`flex size-9 items-center justify-center rounded-lg ${
-                  stats.errorsToday > 0
-                    ? "bg-red-500/10"
-                    : "bg-emerald-500/10"
+                  stats.errorsToday > 0 ? "bg-red-500/10" : "bg-emerald-500/10"
                 }`}
               >
                 {stats.errorsToday > 0 ? (
@@ -355,8 +346,7 @@ export default async function DashboardPage() {
 }
 
 function ActivityRow({ log }: { log: RecentLog }) {
-  const config =
-    severityConfig[log.severity] ?? severityConfig.INFO;
+  const config = severityConfig[log.severity] ?? severityConfig.INFO;
   const Icon = config.icon;
 
   return (
