@@ -1,0 +1,71 @@
+# Phase 2: Election & Position Management
+
+Build full CRUD for elections and their positions.
+
+## Proposed Changes
+
+### Server Actions
+
+#### [NEW] [elections.ts](file:///d:/Projects/sja-voting/actions/elections.ts)
+
+Server actions for elections:
+- `getElections()` — List all elections with position count
+- `createElection(formData)` — Create with name, validates non-empty
+- `updateElection(formData)` — Update name
+- `toggleElection(id)` — Toggle `isActive` (only one election active at a time — deactivates others)
+- `deleteElection(id)` — Delete with cascade (positions + candidates via schema)
+
+#### [NEW] [positions.ts](file:///d:/Projects/sja-voting/actions/positions.ts)
+
+Server actions for positions within an election:
+- `getPositions(electionId)` — List positions ordered by `order`
+- `createPosition(formData)` — Create with name, order, maxVotes, electionId
+- `updatePosition(formData)` — Update name, order, maxVotes
+- `deletePosition(id)` — Delete (cascades candidates via schema)
+
+---
+
+### Election List Page
+
+#### [MODIFY] [page.tsx](file:///d:/Projects/sja-voting/app/dashboard/elections/page.tsx)
+
+Replace placeholder with full election management:
+- Table showing elections (name, status badge, position count, created date)
+- "Create Election" button → dialog with name input
+- Row actions: Edit name, Toggle active/inactive, Delete (with confirmation)
+- Click an election row → navigates to detail page
+
+---
+
+### Election Detail Page (Position Management)
+
+#### [NEW] [page.tsx](file:///d:/Projects/sja-voting/app/dashboard/elections/[id]/page.tsx)
+
+Election detail with inline position management:
+- Header showing election name + status
+- Table of positions (name, order, max votes, candidate count)
+- "Add Position" button → dialog with name, order, maxVotes fields
+- Row actions: Edit, Delete (with confirmation)
+- Back link to election list
+
+---
+
+### UI Components Needed
+
+#### ShadCN components to add (via `bunx shadcn add`):
+- `dialog` — for create/edit modals
+- `table` — for data tables
+- `badge` — for status badges
+- `dropdown-menu` — for row action menus
+- `select` — for maxVotes selector
+
+## Verification Plan
+
+### Manual Verification
+1. Navigate to `/dashboard/elections` — see empty state
+2. Create an election → appears in table
+3. Toggle election active → badge updates, other elections deactivate
+4. Click election → navigate to detail page
+5. Add positions with name/order/maxVotes → appear in table
+6. Edit and delete positions → table updates
+7. Delete election → redirects to list, cascade removes positions

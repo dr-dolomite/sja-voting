@@ -1,0 +1,45 @@
+# SJA Voting — Build Tasks
+
+## Phase 1: Dashboard Navigation
+
+- [x] Create sidebar navigation component with links to all admin sub-pages
+- [x] Update dashboard layout to use sidebar + content area pattern
+- [x] Create placeholder pages for each admin section (elections, voters, partylists, candidates, admins, results)
+- [x] Route protection already handled via [proxy.ts](file:///d:/Projects/sja-voting/proxy.ts)
+
+## Phase 2: Election & Position Management
+
+- [/] Server actions for election CRUD
+- [/] Server actions for position CRUD (within elections)
+- [ ] Election list page
+- [ ] Election detail page with position management
+
+## Phase 3: Partylist Management
+
+- [ ] Server actions for partylist CRUD
+- [ ] Partylist list page with create/edit/delete
+
+## Phase 4: Voter Management
+
+- [ ] Server actions for voter CRUD + spreadsheet import
+- [ ] Voter list page with import UI
+
+## Phase 5: Candidate Management
+
+- [ ] Server actions for candidate CRUD
+- [ ] Candidate list page with image upload
+
+## Phase 6: Admin Account Management
+
+- [ ] Server actions for admin CRUD
+- [ ] Admin list page with password management
+
+## Phase 7: Voter Auth & Ballot
+
+- [ ] LRN-based voter login
+- [ ] Voting ballot page
+- [ ] Post-vote confirmation
+
+## Phase 8: Results & Statistics
+
+- [ ] Results page with live counting + per-section turnout

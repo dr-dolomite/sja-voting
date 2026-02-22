@@ -1,0 +1,99 @@
+# Authentication System — Implementation Plan (Final)
+
+Admin login/logout using JWT cookies, protecting the `/dashboard` route group.
+
+## Key Compatibility Notes
+
+> [!IMPORTANT]
+> **Next.js 16**: Uses [proxy.ts](file:///d:/Projects/sja-voting/proxy.ts) instead of [middleware.ts](file:///d:/Projects/sja-voting/middleware.ts) — function export renamed to [proxy()](file:///d:/Projects/sja-voting/proxy.ts#4-31).
+
+> [!WARNING]
+> **Prisma 7 + Turbopack**: Must use `prisma-client-js` generator (not `prisma-client`). Import from `@/lib/generated/prisma` (not `/client`).
+
+> [!CAUTION]
+> **No `bun --bun`**: The `--bun` flag breaks Turbopack's `node:crypto` resolution. Use `next dev` directly.
+
+---
+
+## Project Structure Conventions
+
+| Concern | Location |
+|---------|----------|
+| Pages & layouts | `app/` |
+| Server actions | `actions/` |
+| Components | `components/<feature>/` |
+| Utilities & DB | `lib/` |
+
+---
+
+## Implemented Changes
+
+### Auth Utilities
+
+#### [NEW] [auth.ts](file:///d:/Projects/sja-voting/lib/auth.ts)
+JWT helpers: [signToken](file:///d:/Projects/sja-voting/lib/auth.ts#12-19), [verifyToken](file:///d:/Projects/sja-voting/lib/auth.ts#20-30), [getSession](file:///d:/Projects/sja-voting/lib/auth.ts#31-37) — uses `jose` + `JWT_SECRET` env var.
+
+---
+
+### Server Actions
+
+#### [NEW] [auth.ts](file:///d:/Projects/sja-voting/actions/auth.ts)
+- [loginAction(prevState, formData)](file:///d:/Projects/sja-voting/actions/auth.ts#9-48) — validates credentials via bcrypt, sets httpOnly JWT cookie, redirects to `/dashboard`
+- [logoutAction()](file:///d:/Projects/sja-voting/actions/auth.ts#49-54) — deletes cookie, redirects to `/login`
+
+---
+
+### Route Protection
+
+#### [NEW] [proxy.ts](file:///d:/Projects/sja-voting/proxy.ts)
+Next.js 16 proxy convention. Matcher: `["/dashboard/:path*", "/login"]`
+- `/dashboard/*` → redirect to `/login` if unauthenticated
+- `/login` → redirect to `/dashboard` if already authenticated
+
+---
+
+### Components
+
+#### [NEW] [login-form.tsx](file:///d:/Projects/sja-voting/components/auth/login-form.tsx)
+Client component using `useActionState` with [loginAction](file:///d:/Projects/sja-voting/actions/auth.ts#9-48).
+
+#### [NEW] [logout-button.tsx](file:///d:/Projects/sja-voting/components/auth/logout-button.tsx)
+Reusable logout button wrapping [logoutAction](file:///d:/Projects/sja-voting/actions/auth.ts#49-54).
+
+#### [NEW] [sidebar.tsx](file:///d:/Projects/sja-voting/components/dashboard/sidebar.tsx)
+Collapsible sidebar with nav items + integrated logout (user-styled).
+
+---
+
+### Pages
+
+#### [NEW] [login/page.tsx](file:///d:/Projects/sja-voting/app/login/page.tsx)
+Thin wrapper rendering `<LoginForm />`.
+
+#### [NEW] [dashboard/layout.tsx](file:///d:/Projects/sja-voting/app/dashboard/layout.tsx)
+Sidebar shell with `SidebarProvider` + `SidebarInset` + header (user-styled).
+
+#### [NEW] [dashboard/page.tsx](file:///d:/Projects/sja-voting/app/dashboard/page.tsx)
+Placeholder dashboard page.
+
+---
+
+### Modified Files
+
+#### [MODIFY] [schema.prisma](file:///d:/Projects/sja-voting/prisma/schema.prisma)
+Generator `prisma-client` → `prisma-client-js`.
+
+#### [MODIFY] [db.ts](file:///d:/Projects/sja-voting/lib/db.ts)
+Import path updated: `@/lib/generated/prisma/client` → `@/lib/generated/prisma`.
+
+#### [MODIFY] [seed.ts](file:///d:/Projects/sja-voting/prisma/seed.ts)
+Import path updated to match.
+
+#### [MODIFY] [package.json](file:///d:/Projects/sja-voting/package.json)
+Removed `--bun` flag from `dev`, `build`, `start` scripts.
+
+---
+
+## Verification Results
+
+All checks passed ✅: route protection, invalid login error, successful login, authenticated redirect, logout, post-logout protection.
