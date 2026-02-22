@@ -13,7 +13,7 @@ import {
 
 export default function AlreadyVotedPage() {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(10);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -31,8 +31,8 @@ export default function AlreadyVotedPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md text-center">
-        <CardHeader className="pb-4">
+      <Card className="w-full max-w-lg text-center">
+        <CardHeader>
           <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
             <ShieldCheck className="size-10 text-blue-600 dark:text-blue-400" />
           </div>
@@ -42,17 +42,18 @@ export default function AlreadyVotedPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="rounded-lg border border-dashed p-4">
+            <p className="text-sm font-medium text-muted-foreground">
+              If you believe there was an error, please contact your election
+              administrator.
+            </p>
+          </div>
+
           <p className="text-sm text-muted-foreground">
             Redirecting to login in{" "}
             <span className="font-semibold">{countdown}</span> second
             {countdown !== 1 ? "s" : ""}…
           </p>
-          <div className="rounded-lg border border-dashed p-4">
-            <p className="text-xs text-muted-foreground">
-              If you believe there was an error, please contact your election
-              administrator.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

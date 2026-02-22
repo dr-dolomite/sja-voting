@@ -1,5 +1,4 @@
 "use client";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
@@ -22,7 +21,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto text-center text-4xl md:text-7xl font-bold">
             <h1>
               Choose your next leaders with
-              <span className="text-transparent px-2 bg-linear-to-r from-primary bg-clip-text">
+              <span className="text-primary px-2 bg-clip-text">
                 SJA Voting System
               </span>
             </h1>
