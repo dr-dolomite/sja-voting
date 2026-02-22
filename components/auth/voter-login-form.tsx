@@ -8,7 +8,6 @@ import {
 import { useActionState } from "react";
 import { voterLoginAction } from "@/actions/voter-auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TriangleAlertIcon, User2Icon } from "lucide-react";
 

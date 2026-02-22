@@ -148,12 +148,14 @@ export function BallotForm({ election }: { election: Election }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">{position.name}</CardTitle>
+          <CardTitle className="text-3xl font-bold">{position.name}</CardTitle>
           <CardDescription>
-            Select{" "}
-            {position.maxVotes === 1 ? "one" : `up to ${position.maxVotes}`}{" "}
-            candidate{position.maxVotes > 1 ? "s" : ""}
-            {" · "}
+            <span className="font-semibold text-black">
+              Select{" "}
+              {position.maxVotes === 1 ? "one" : `up to ${position.maxVotes}`}{" "}
+              candidate{position.maxVotes > 1 ? "s" : ""}
+              {" · "}
+            </span>
             {selected.size}/{position.maxVotes} selected
           </CardDescription>
         </CardHeader>
@@ -213,7 +215,7 @@ export function BallotForm({ election }: { election: Election }) {
                       )}
 
                       {/* Name */}
-                      <span className="text-base font-semibold leading-tight">
+                      <span className="text-2xl font-semibold leading-tight">
                         {candidate.fullName}
                       </span>
 
@@ -342,11 +344,11 @@ export function BallotForm({ election }: { election: Election }) {
   // ── Main render ────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 pb-28">
+    <div className="mx-auto max-w-4xl space-y-6 p-4 pb-28 pt-16">
       {/* Header */}
       <div className="text-center">
         <h1 className="text-2xl font-bold">{election.name}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-md text-muted-foreground">
           Step {page + 1} of {totalPages}
           {isReviewPage ? " — Review" : ` — ${election.positions[page].name}`}
         </p>
@@ -366,7 +368,7 @@ export function BallotForm({ election }: { election: Election }) {
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
           >
-            <ChevronLeft className="mr-1 size-4" />
+            <ChevronLeft className="size-4" />
             Back
           </Button>
 
@@ -381,7 +383,7 @@ export function BallotForm({ election }: { election: Election }) {
           ) : (
             <Button onClick={() => setPage((p) => p + 1)}>
               {page === election.positions.length - 1 ? "Review" : "Next"}
-              <ChevronRight className="ml-1 size-4" />
+              <ChevronRight className="size-4" />
             </Button>
           )}
         </div>
@@ -485,7 +487,7 @@ function BallotImagePreloader({ election }: { election: Election }) {
 
   return (
     <div
-      className="pointer-events-none fixed -left-[9999px] -top-[9999px] size-0 overflow-hidden"
+      className="pointer-events-none fixed -left-2499.75 -top-2499.75size-0 overflow-hidden"
       aria-hidden="true"
     >
       {urls.map((url) => (
