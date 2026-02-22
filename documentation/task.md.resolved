@@ -26,13 +26,13 @@
 
 ## Phase 5: Candidate Management
 
-- [ ] Server actions for candidate CRUD
-- [ ] Candidate list page with image upload
+- [/] Server actions for candidate CRUD
+- [/] Candidate list page with image upload
 
 ## Phase 6: Admin Account Management
 
-- [ ] Server actions for admin CRUD
-- [ ] Admin list page with password management
+- [/] Server actions for admin CRUD
+- [/] Admin list page with password management
 
 ## Phase 7: Voter Auth & Ballot
 
