@@ -11,6 +11,7 @@ import {
   Activity,
   Upload,
   UserCog,
+  ShieldHalfIcon,
 } from "lucide-react";
 
 import {
@@ -165,17 +166,17 @@ export default async function DashboardPage() {
 
         {/* Candidates */}
         <Card className="relative overflow-hidden border-0 shadow-sm">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 size-24 rounded-full bg-purple-500/5" />
+          <div className="absolute top-0 right-0 -mt-2 -mr-4 size-24 rounded-full bg-purple-500/5" />
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardDescription className="text-xs font-medium uppercase tracking-wider">
+              <CardDescription className="text-sm font-semibold uppercase tracking-wider">
                 Candidates
               </CardDescription>
-              <div className="flex size-9 items-center justify-center rounded-lg bg-purple-500/10">
+              <div className="flex size-9 -mr-2 items-center justify-center rounded-lg bg-purple-500/10">
                 <Trophy className="size-4 text-purple-500" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold tabular-nums">
+            <CardTitle className="text-5xl font-bold tabular-nums">
               {stats.totalCandidates}
             </CardTitle>
           </CardHeader>
@@ -186,17 +187,17 @@ export default async function DashboardPage() {
 
         {/* Partylists */}
         <Card className="relative overflow-hidden border-0 shadow-sm">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 size-24 rounded-full bg-emerald-500/5" />
+          <div className="absolute top-0 right-0 -mt-2 -mr-4 size-24 rounded-full bg-amber-500/5" />
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardDescription className="text-xs font-medium uppercase tracking-wider">
+              <CardDescription className="text-sm font-semibold uppercase tracking-wider">
                 Partylists
               </CardDescription>
-              <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10">
-                <Flag className="size-4 text-emerald-500" />
+              <div className="flex size-9 -mr-2 items-center justify-center rounded-lg bg-amber-500/10">
+                <Flag className="size-4 text-amber-500" />
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold tabular-nums">
+            <CardTitle className="text-5xl font-bold tabular-nums">
               {stats.totalPartylists}
             </CardTitle>
           </CardHeader>
@@ -207,14 +208,16 @@ export default async function DashboardPage() {
 
         {/* System Health */}
         <Card className="relative overflow-hidden border-0 shadow-sm">
-          <div className="absolute top-0 right-0 -mt-4 -mr-4 size-24 rounded-full bg-amber-500/5" />
+          <div
+            className={`absolute top-0 right-0 -mt-2 -mr-4 size-24 rounded-full ${stats.errorsToday > 0 ? "bg-red-500/5" : "bg-emerald-500/5"}`}
+          />
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardDescription className="text-xs font-medium uppercase tracking-wider">
+              <CardDescription className="text-sm font-semibold uppercase tracking-wider">
                 System Health
               </CardDescription>
               <div
-                className={`flex size-9 items-center justify-center rounded-lg ${
+                className={`flex size-9 -mr-2 items-center justify-center rounded-lg ${
                   stats.errorsToday > 0 ? "bg-red-500/10" : "bg-emerald-500/10"
                 }`}
               >
@@ -225,7 +228,7 @@ export default async function DashboardPage() {
                 )}
               </div>
             </div>
-            <CardTitle className="text-3xl font-bold tabular-nums">
+            <CardTitle className="text-5xl font-bold tabular-nums">
               {stats.errorsToday > 0 ? stats.errorsToday : "OK"}
             </CardTitle>
           </CardHeader>
@@ -243,16 +246,37 @@ export default async function DashboardPage() {
 
       {/* Quick Actions */}
       <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">
-            Quick Actions
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Common administrative tasks
-          </CardDescription>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Common administrative tasks</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-4">
+            <Button
+              variant="outline"
+              className="h-auto justify-start gap-3 px-4 py-3"
+              asChild
+            >
+              {/* View positions */}
+              <Link
+                href={
+                  stats.activeElection
+                    ? `/dashboard/elections/${stats.activeElection.id}`
+                    : "/dashboard/elections"
+                }
+              >
+                <div className="flex size-8 items-center justify-center rounded-md bg-amber-500/10">
+                  <ShieldHalfIcon className="size-4 text-amber-500" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium">Manage Positions</p>
+                  <p className="text-xs text-muted-foreground">
+                    View and edit election positions
+                  </p>
+                </div>
+              </Link>
+            </Button>
+
             <Button
               variant="outline"
               className="h-auto justify-start gap-3 px-4 py-3"
@@ -287,6 +311,7 @@ export default async function DashboardPage() {
                 </div>
               </Link>
             </Button>
+
             <Button
               variant="outline"
               className="h-auto justify-start gap-3 px-4 py-3"
