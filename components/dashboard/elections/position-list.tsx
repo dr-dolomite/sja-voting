@@ -128,7 +128,7 @@ export function PositionList({
     <>
       <div className="flex justify-end">
         <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 size-4" />
+          <Plus className="size-4" />
           Add Position
         </Button>
       </div>
