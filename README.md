@@ -1,36 +1,126 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SJA Voting System
+
+A locally-hosted student leader voting system for school elections. Built with **Next.js 16**, **ShadCN UI**, and **PostgreSQL**.
+
+## Features
+
+- **LRN-based authentication** — Students log in using their Learner Reference Number (no passwords needed)
+- **Admin dashboard** — Manage elections, voters, partylists, candidates, and admin accounts
+- **Spreadsheet import** — Bulk-import voters from `.xlsx` or `.csv` files (Column A = LRN, Column B = Section)
+- **Voting ballot** — Clean radio-button UI with candidate photos, partylist badges, and optional descriptions
+- **Single-vote enforcement** — Each voter can only cast their ballot once
+- **Live results** — Real-time vote counting and statistics with per-section turnout
+
+## Tech Stack
+
+| Layer       | Technology                                       |
+| ----------- | ------------------------------------------------ |
+| Framework   | Next.js 16 (App Router, Server Actions, RSC)     |
+| UI          | ShadCN (new-york style), Tailwind CSS v4, Lucide |
+| ORM         | Prisma                                           |
+| Database    | PostgreSQL (local)                               |
+| Runtime     | Bun                                              |
+| Auth        | Custom JWT via `jose` (fully offline)            |
+| File Import | `xlsx` (SheetJS)                                 |
+
+## Prerequisites
+
+- [Bun](https://bun.sh) installed
+- [PostgreSQL](https://www.postgresql.org/) installed and running locally
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env` file in the project root:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/sja_voting"
+JWT_SECRET="your-secret-key-here"
+```
 
-## Learn More
+### 3. Set up the database
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+bunx prisma migrate dev --name init
+bunx prisma db seed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This creates all tables and seeds a default admin account:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Username:** `admin`
+- **Password:** `admin123`
 
-## Deploy on Vercel
+> ⚠️ Change the default admin password after first login via the Admin Manager page.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. Run the dev server
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+bun run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Project Structure
+
+```
+app/
+├── (auth)/login/          # Login page (voter + admin tabs)
+├── (admin)/admin/
+│   ├── page.tsx           # Dashboard overview
+│   ├── voters/            # Voter management + spreadsheet import
+│   ├── partylists/        # Partylist CRUD
+│   ├── candidates/        # Candidate CRUD + image upload
+│   ├── elections/         # Election & position management
+│   ├── results/           # Live counting + statistics
+│   └── admins/            # Admin account management
+├── (voter)/vote/          # Voting ballot
+└── api/upload/            # Candidate image upload
+lib/
+├── db.ts                  # Prisma client singleton
+├── auth.ts                # JWT + bcrypt utilities
+└── actions/               # Server Actions (auth, voters, candidates, etc.)
+prisma/
+├── schema.prisma          # Database schema
+└── seed.ts                # Default admin seeder
+```
+
+## Data Models
+
+- **Admin** — Admin accounts (username + hashed password)
+- **Election** — Named elections with an active/inactive toggle
+- **Position** — Ordered positions within an election (e.g., President, VP)
+- **Partylist** — Political partylists with a display color
+- **Candidate** — Tied to a position + partylist, with optional photo & bio
+- **Section** — Student sections (auto-created during import)
+- **Voter** — Identified by LRN, linked to a section, tracked for vote status
+- **Vote** — Links a voter to a candidate (unique constraint prevents duplicates)
+
+## Voter Import Format
+
+Prepare a `.xlsx` or `.csv` file with:
+
+| Column A (LRN) | Column B (Section)   |
+| -------------- | -------------------- |
+| 123456789012   | Grade 10 - Rizal     |
+| 123456789013   | Grade 10 - Rizal     |
+| 123456789014   | Grade 10 - Bonifacio |
+
+Sections are auto-created if they don't already exist.
+
+## Routes & Auth
+
+| Route           | Access | Description            |
+| --------------- | ------ | ---------------------- |
+| `/login`        | Public | Login page             |
+| `/admin/*`      | Admin  | Admin dashboard pages  |
+| `/vote`         | Voter  | Voting ballot          |
+| `/vote/success` | Voter  | Post-vote confirmation |
+
+Auth is handled via `HttpOnly` JWT cookies. Middleware enforces role-based access.
