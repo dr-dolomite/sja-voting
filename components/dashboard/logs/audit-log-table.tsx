@@ -110,14 +110,16 @@ function actorIcon(actorType: string) {
 }
 
 function formatTimestamp(date: Date) {
-  return new Date(date).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
+  const d = new Date(date);
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const month = months[d.getUTCMonth()];
+  const day = d.getUTCDate();
+  const h = d.getUTCHours();
+  const m = String(d.getUTCMinutes()).padStart(2, "0");
+  const s = String(d.getUTCSeconds()).padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return `${month} ${day}, ${String(hour12).padStart(2, "0")}:${m}:${s} ${ampm}`;
 }
 
 // ─── Component ──────────────────────────────────────────────────
@@ -464,7 +466,7 @@ export function AuditLogTable({
                 <div>
                   <p className="text-muted-foreground">Timestamp</p>
                   <p className="font-medium">
-                    {new Date(detailLog.timestamp).toLocaleString()}
+                    {formatTimestamp(detailLog.timestamp)}
                   </p>
                 </div>
                 <div>
