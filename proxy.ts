@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth";
+import { verifyToken, verifyVoterToken } from "@/lib/auth";
 
 export async function proxy(request: NextRequest) {
-  const token = request.cookies.get("session")?.value;
   const { pathname } = request.nextUrl;
 
-  // If visiting /login while already authenticated, redirect to dashboard
+  // ─── Admin routes ───────────────────────────────────────────
   if (pathname === "/login") {
+    const token = request.cookies.get("session")?.value;
     if (token) {
       const session = await verifyToken(token);
       if (session) {
@@ -16,19 +16,45 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protect /dashboard routes — redirect to /login if not authenticated
-  if (!token) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (pathname.startsWith("/dashboard")) {
+    const token = request.cookies.get("session")?.value;
+    if (!token) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    const session = await verifyToken(token);
+    if (!session) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    return NextResponse.next();
   }
 
-  const session = await verifyToken(token);
-  if (!session) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // ─── Voter routes ──────────────────────────────────────────
+  if (pathname === "/vote/login") {
+    const token = request.cookies.get("voter-session")?.value;
+    if (token) {
+      const session = await verifyVoterToken(token);
+      if (session) {
+        return NextResponse.redirect(new URL("/vote", request.url));
+      }
+    }
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/vote")) {
+    const token = request.cookies.get("voter-session")?.value;
+    if (!token) {
+      return NextResponse.redirect(new URL("/vote/login", request.url));
+    }
+    const session = await verifyVoterToken(token);
+    if (!session) {
+      return NextResponse.redirect(new URL("/vote/login", request.url));
+    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login"],
+  matcher: ["/dashboard/:path*", "/login", "/vote/:path*"],
 };
