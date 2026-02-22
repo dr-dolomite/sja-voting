@@ -3,12 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
-import {
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Info,
-} from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -156,9 +151,7 @@ export function BallotForm({ election }: { election: Election }) {
           <CardTitle className="text-xl">{position.name}</CardTitle>
           <CardDescription>
             Select{" "}
-            {position.maxVotes === 1
-              ? "one"
-              : `up to ${position.maxVotes}`}{" "}
+            {position.maxVotes === 1 ? "one" : `up to ${position.maxVotes}`}{" "}
             candidate{position.maxVotes > 1 ? "s" : ""}
             {" · "}
             {selected.size}/{position.maxVotes} selected
@@ -225,10 +218,7 @@ export function BallotForm({ election }: { election: Election }) {
                       </span>
 
                       {/* Partylist badge */}
-                      <Badge
-                        variant="outline"
-                        className="mt-2 gap-1.5 text-sm"
-                      >
+                      <Badge variant="outline" className="mt-2 gap-1.5 text-sm">
                         {candidate.partylist.color && (
                           <span
                             className="inline-block size-2 rounded-full"
@@ -286,8 +276,8 @@ export function BallotForm({ election }: { election: Election }) {
         <CardHeader>
           <CardTitle className="text-xl">Review Your Ballot</CardTitle>
           <CardDescription>
-            Review your selections before submitting.{" "}
-            {filledPositions}/{election.positions.length} positions filled.
+            Review your selections before submitting. {filledPositions}/
+            {election.positions.length} positions filled.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -358,9 +348,7 @@ export function BallotForm({ election }: { election: Election }) {
         <h1 className="text-2xl font-bold">{election.name}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Step {page + 1} of {totalPages}
-          {isReviewPage
-            ? " — Review"
-            : ` — ${election.positions[page].name}`}
+          {isReviewPage ? " — Review" : ` — ${election.positions[page].name}`}
         </p>
       </div>
 
@@ -416,6 +404,9 @@ export function BallotForm({ election }: { election: Election }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Preload all candidate images across every position for instant step transitions */}
+      <BallotImagePreloader election={election} />
 
       {/* Candidate description popup */}
       <Dialog
@@ -473,6 +464,33 @@ export function BallotForm({ election }: { election: Election }) {
           </DialogHeader>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Image Preloader – eagerly fetches every candidate image            */
+/* ------------------------------------------------------------------ */
+
+function BallotImagePreloader({ election }: { election: Election }) {
+  const urls = Array.from(
+    new Set(
+      election.positions.flatMap((p) =>
+        p.candidates.map((c) => c.imageUrl).filter(Boolean),
+      ),
+    ),
+  ) as string[];
+
+  if (urls.length === 0) return null;
+
+  return (
+    <div
+      className="pointer-events-none fixed -left-[9999px] -top-[9999px] size-0 overflow-hidden"
+      aria-hidden="true"
+    >
+      {urls.map((url) => (
+        <Image key={url} src={url} alt="" width={80} height={80} priority />
+      ))}
     </div>
   );
 }

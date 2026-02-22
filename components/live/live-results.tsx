@@ -119,11 +119,7 @@ function TurnoutRing({
 /*  Position Carousel                                                  */
 /* ------------------------------------------------------------------ */
 
-function PositionCarousel({
-  positions,
-}: {
-  positions: PositionResult[];
-}) {
+function PositionCarousel({ positions }: { positions: PositionResult[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval>>(null);
 
@@ -384,6 +380,36 @@ export function LiveResults({
       <footer className="border-t px-6 py-4 text-center text-xs text-muted-foreground">
         Results refresh automatically &middot; SJA Voting System
       </footer>
+
+      {/* Preload all candidate images so carousel transitions are instant */}
+      {results && <ImagePreloader results={results} />}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Image Preloader – eagerly fetches every candidate image            */
+/* ------------------------------------------------------------------ */
+
+function ImagePreloader({ results }: { results: ElectionResult }) {
+  const urls = Array.from(
+    new Set(
+      results.positions.flatMap((p) =>
+        p.candidates.map((c) => c.imageUrl).filter(Boolean),
+      ),
+    ),
+  ) as string[];
+
+  if (urls.length === 0) return null;
+
+  return (
+    <div
+      className="pointer-events-none fixed -left-[9999px] -top-[9999px] size-0 overflow-hidden"
+      aria-hidden="true"
+    >
+      {urls.map((url) => (
+        <Image key={url} src={url} alt="" width={80} height={80} priority />
+      ))}
     </div>
   );
 }
