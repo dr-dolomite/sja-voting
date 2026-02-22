@@ -21,7 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getDashboardStats } from "@/actions/dashboard";
+import { getDashboardStats, type RecentLog } from "@/actions/dashboard";
 
 function formatAction(action: string) {
   return action
