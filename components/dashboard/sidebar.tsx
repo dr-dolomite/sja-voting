@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ChevronRight,
   LayoutDashboard,
   Vote,
   Flag,
@@ -10,9 +11,16 @@ import {
   UserCog,
   ShieldCheck,
   BarChart3,
+  Trophy,
+  PieChart,
   LogOut,
 } from "lucide-react";
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +32,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { logoutAction } from "@/actions/auth";
@@ -59,15 +70,26 @@ const navItems = [
     href: "/dashboard/admins",
     icon: ShieldCheck,
   },
+];
+
+const resultsItems = [
   {
-    title: "Results",
+    title: "Summary",
     href: "/dashboard/results",
-    icon: BarChart3,
+  },
+  {
+    title: "Vote Counts",
+    href: "/dashboard/results/votes",
+  },
+  {
+    title: "Voter Turnout",
+    href: "/dashboard/results/turnout",
   },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const isResultsActive = pathname.startsWith("/dashboard/results");
 
   return (
     <Sidebar collapsible="icon">
@@ -117,6 +139,52 @@ export function AppSidebar() {
                   </SidebarMenuItem>
                 );
               })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Analytics</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <Collapsible
+                asChild
+                defaultOpen={isResultsActive}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                      tooltip="Results"
+                      isActive={isResultsActive}
+                    >
+                      <BarChart3 />
+                      <span>Results</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {resultsItems.map((item) => {
+                        const isActive =
+                          item.href === "/dashboard/results"
+                            ? pathname === "/dashboard/results"
+                            : pathname === item.href;
+
+                        return (
+                          <SidebarMenuSubItem key={item.href}>
+                            <SidebarMenuSubButton asChild isActive={isActive}>
+                              <Link href={item.href}>
+                                <span>{item.title}</span>
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        );
+                      })}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
