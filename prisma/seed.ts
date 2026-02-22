@@ -1,4 +1,4 @@
-import { PrismaClient } from "../lib/generated/prisma/client";
+import { PrismaClient } from "../lib/generated/prisma";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { hash } from "bcryptjs";
 
