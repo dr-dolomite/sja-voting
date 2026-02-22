@@ -2,6 +2,14 @@
 
 import { db } from "@/lib/db";
 
+/** Get the currently active election (if any). */
+export async function getActiveElection() {
+  return db.election.findFirst({
+    where: { isActive: true },
+    select: { id: true, name: true },
+  });
+}
+
 /** Get all elections for the dropdown selector. */
 export async function getElectionsForResults() {
   return db.election.findMany({
