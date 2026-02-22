@@ -84,3 +84,62 @@ model Vote {
 
   @@unique([voterId, candidateId])
 }
+
+// ─── Audit Logging ──────────────────────────────────────────────
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  timestamp DateTime    @default(now())
+
+  // Who performed the action
+  actorType ActorType
+  actorId   String?
+  actorName String?
+
+  // What happened
+  action   String
+  category LogCategory
+  severity LogSeverity @default(INFO)
+
+  // Context
+  targetType String?
+  targetId   String?
+  targetName String?
+
+  // Details
+  detail   String?
+  metadata Json?
+
+  // Request context
+  ipAddress String?
+
+  @@index([timestamp])
+  @@index([category])
+  @@index([severity])
+  @@index([actorType])
+  @@index([action])
+}
+
+enum ActorType {
+  ADMIN
+  VOTER
+  SYSTEM
+}
+
+enum LogCategory {
+  AUTH
+  VOTE
+  ELECTION
+  POSITION
+  CANDIDATE
+  PARTYLIST
+  VOTER_MGMT
+  ADMIN_MGMT
+  SYSTEM
+}
+
+enum LogSeverity {
+  INFO
+  WARNING
+  ERROR
+}
