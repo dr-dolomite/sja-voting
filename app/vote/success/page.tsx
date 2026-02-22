@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function AlreadyVotedPage() {
+export default function VoteSuccessPage() {
   const router = useRouter();
   const [countdown, setCountdown] = useState(5);
 
@@ -33,15 +33,19 @@ export default function AlreadyVotedPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md text-center">
         <CardHeader className="pb-4">
-          <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-            <ShieldCheck className="size-10 text-blue-600 dark:text-blue-400" />
+          <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+            <CheckCircle2 className="size-10 text-green-600 dark:text-green-400" />
           </div>
-          <CardTitle className="text-2xl">Already Voted</CardTitle>
+          <CardTitle className="text-2xl">Vote Submitted!</CardTitle>
           <CardDescription className="text-base">
-            You have already cast your vote. Thank you!
+            Your vote has been recorded successfully.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Thank you for participating in the election. Your selections have
+            been securely saved.
+          </p>
           <p className="text-sm text-muted-foreground">
             Redirecting to login in{" "}
             <span className="font-semibold">{countdown}</span> second

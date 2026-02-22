@@ -164,75 +164,85 @@ export function BallotForm({ election }: { election: Election }) {
             {selected.size}/{position.maxVotes} selected
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent>
           {position.candidates.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No candidates for this position.
             </p>
           ) : (
-            position.candidates.map((candidate) => {
-              const isSelected = selected.has(candidate.id);
-              const hasLongDesc =
-                candidate.description &&
-                candidate.description.length > DESC_TRUNCATE_LENGTH;
+            <div className="grid grid-cols-2 gap-4">
+              {position.candidates.map((candidate) => {
+                const isSelected = selected.has(candidate.id);
+                const hasLongDesc =
+                  candidate.description &&
+                  candidate.description.length > DESC_TRUNCATE_LENGTH;
 
-              return (
-                <div key={candidate.id} className="relative">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      toggleCandidate(
-                        position.id,
-                        candidate.id,
-                        position.maxVotes,
-                      )
-                    }
-                    className={`flex w-full items-center gap-4 rounded-lg border p-4 text-left transition-colors ${
-                      isSelected
-                        ? "border-primary bg-primary/5 ring-2 ring-primary"
-                        : "border-border hover:bg-muted/50"
-                    }`}
-                  >
-                    {/* Avatar */}
-                    {candidate.imageUrl ? (
-                      <Image
-                        src={candidate.imageUrl}
-                        alt={candidate.fullName}
-                        width={48}
-                        height={48}
-                        className="size-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium">
-                        {candidate.fullName
-                          .split(" ")
-                          .map((w) => w[0])
-                          .join("")
-                          .slice(0, 2)
-                          .toUpperCase()}
-                      </div>
-                    )}
+                return (
+                  <div key={candidate.id} className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        toggleCandidate(
+                          position.id,
+                          candidate.id,
+                          position.maxVotes,
+                        )
+                      }
+                      className={`flex w-full flex-col items-center rounded-lg border p-5 pb-6 text-center transition-colors ${
+                        isSelected
+                          ? "border-primary bg-primary/5 ring-2 ring-primary"
+                          : "border-border hover:bg-muted/50"
+                      }`}
+                    >
+                      {/* Selection indicator */}
+                      {isSelected && (
+                        <CheckCircle2 className="absolute top-2 right-2 size-5 text-primary" />
+                      )}
 
-                    {/* Info */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {candidate.fullName}
-                        </span>
-                        <Badge variant="outline" className="gap-1 text-xs">
-                          {candidate.partylist.color && (
-                            <span
-                              className="inline-block size-2 rounded-full"
-                              style={{
-                                backgroundColor: candidate.partylist.color,
-                              }}
-                            />
-                          )}
-                          {candidate.partylist.name}
-                        </Badge>
-                      </div>
+                      {/* Square image */}
+                      {candidate.imageUrl ? (
+                        <Image
+                          src={candidate.imageUrl}
+                          alt={candidate.fullName}
+                          width={320}
+                          height={320}
+                          className="mb-3 size-64 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="mb-3 flex size-36 shrink-0 items-center justify-center rounded-lg bg-muted text-3xl font-semibold">
+                          {candidate.fullName
+                            .split(" ")
+                            .map((w) => w[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase()}
+                        </div>
+                      )}
+
+                      {/* Name */}
+                      <span className="text-base font-semibold leading-tight">
+                        {candidate.fullName}
+                      </span>
+
+                      {/* Partylist badge */}
+                      <Badge
+                        variant="outline"
+                        className="mt-2 gap-1.5 text-sm"
+                      >
+                        {candidate.partylist.color && (
+                          <span
+                            className="inline-block size-2 rounded-full"
+                            style={{
+                              backgroundColor: candidate.partylist.color,
+                            }}
+                          />
+                        )}
+                        {candidate.partylist.name}
+                      </Badge>
+
+                      {/* Description preview */}
                       {candidate.description && (
-                        <p className="mt-0.5 text-sm text-muted-foreground">
+                        <p className="mt-2 text-sm leading-snug text-muted-foreground">
                           {hasLongDesc
                             ? candidate.description.slice(
                                 0,
@@ -241,31 +251,25 @@ export function BallotForm({ election }: { election: Election }) {
                             : candidate.description}
                         </p>
                       )}
-                    </div>
 
-                    {/* Check indicator */}
-                    {isSelected && (
-                      <CheckCircle2 className="size-5 shrink-0 text-primary" />
-                    )}
-                  </button>
-
-                  {/* "Read more" button for long descriptions */}
-                  {hasLongDesc && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDescCandidate(candidate);
-                      }}
-                      className="absolute right-2 bottom-2 flex items-center gap-1 rounded-md bg-muted/80 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      <Info className="size-3" />
-                      Read more
+                      {/* "Read more" inline within the button */}
+                      {hasLongDesc && (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDescCandidate(candidate);
+                          }}
+                          className="mt-4 inline-flex items-center gap-1 text-xs font-medium hover:underline"
+                        >
+                          <Info className="size-4" />
+                          Read more
+                        </Button>
+                      )}
                     </button>
-                  )}
-                </div>
-              );
-            })
+                  </div>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -348,19 +352,16 @@ export function BallotForm({ election }: { election: Election }) {
   // ── Main render ────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-4 pb-28">
-      {/* Header + progress */}
-      <div className="space-y-3 text-center">
+    <div className="mx-auto max-w-4xl space-y-6 p-4 pb-28">
+      {/* Header */}
+      <div className="text-center">
         <h1 className="text-2xl font-bold">{election.name}</h1>
-        <div className="space-y-1">
-          <Progress value={progressPercent} className="h-2" />
-          <p className="text-xs text-muted-foreground">
-            Step {page + 1} of {totalPages}
-            {isReviewPage
-              ? " — Review"
-              : ` — ${election.positions[page].name}`}
-          </p>
-        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Step {page + 1} of {totalPages}
+          {isReviewPage
+            ? " — Review"
+            : ` — ${election.positions[page].name}`}
+        </p>
       </div>
 
       {/* Current page content */}
@@ -368,9 +369,10 @@ export function BallotForm({ election }: { election: Election }) {
         ? renderReviewPage()
         : renderPositionPage(election.positions[page])}
 
-      {/* Navigation bar */}
-      <div className="fixed inset-x-0 bottom-0 border-t bg-background p-4">
-        <div className="mx-auto flex max-w-2xl items-center justify-between">
+      {/* Bottom navigation bar with progress */}
+      <div className="fixed inset-x-0 bottom-0 border-t bg-background">
+        <Progress value={progressPercent} className="h-1.5 rounded-none" />
+        <div className="mx-auto flex max-w-4xl items-center justify-between p-4">
           <Button
             variant="outline"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
@@ -431,7 +433,7 @@ export function BallotForm({ election }: { election: Election }) {
                   alt={descCandidate.fullName}
                   width={40}
                   height={40}
-                  className="size-10 rounded-full object-cover"
+                  className="size-16 rounded-full object-cover"
                 />
               ) : (
                 descCandidate && (

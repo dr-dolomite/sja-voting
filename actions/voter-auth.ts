@@ -25,7 +25,7 @@ export async function voterLoginAction(
   }
 
   if (voter.hasVoted) {
-    return { error: "You have already voted." };
+    redirect("/vote/already-voted");
   }
 
   // Check if there's an active election

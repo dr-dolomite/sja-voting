@@ -40,6 +40,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow post-vote pages without auth (cookie is cleared after voting)
+  if (
+    pathname === "/vote/success" ||
+    pathname === "/vote/already-voted"
+  ) {
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith("/vote")) {
     const token = request.cookies.get("voter-session")?.value;
     if (!token) {
