@@ -1,7 +1,9 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { logAdminAction } from "@/lib/logger";
 
 // ─── Section helpers ────────────────────────────────────────────
 
@@ -37,7 +39,21 @@ export async function createVoter(formData: FormData) {
     create: { name: sectionName },
   });
 
-  await db.voter.create({ data: { lrn, sectionId: section.id } });
+  const voter = await db.voter.create({ data: { lrn, sectionId: section.id } });
+
+  const session = await getSession();
+  await logAdminAction({
+    action: "VOTER_CREATED",
+    category: "VOTER_MGMT",
+    actorId: session?.adminId,
+    actorName: session?.username,
+    targetType: "Voter",
+    targetId: voter.id,
+    targetName: lrn,
+    detail: `Created voter LRN "${lrn}" in section "${sectionName}"`,
+    metadata: { lrn, sectionName },
+  });
+
   revalidatePath("/dashboard/voters");
   return { success: true };
 }
@@ -62,14 +78,44 @@ export async function updateVoter(formData: FormData) {
     create: { name: sectionName },
   });
 
+  const old = await db.voter.findUnique({ where: { id }, include: { section: true } });
   await db.voter.update({ where: { id }, data: { lrn, sectionId: section.id } });
+
+  const session = await getSession();
+  await logAdminAction({
+    action: "VOTER_UPDATED",
+    category: "VOTER_MGMT",
+    actorId: session?.adminId,
+    actorName: session?.username,
+    targetType: "Voter",
+    targetId: id,
+    targetName: lrn,
+    detail: `Updated voter "${old?.lrn}" → "${lrn}"`,
+    metadata: { oldLrn: old?.lrn, newLrn: lrn, oldSection: old?.section.name, newSection: sectionName },
+  });
+
   revalidatePath("/dashboard/voters");
   return { success: true };
 }
 
 export async function deleteVoter(id: string) {
+  const voter = await db.voter.findUnique({ where: { id }, include: { section: true } });
   try {
     await db.voter.delete({ where: { id } });
+
+    const session = await getSession();
+    await logAdminAction({
+      action: "VOTER_DELETED",
+      category: "VOTER_MGMT",
+      severity: "WARNING",
+      actorId: session?.adminId,
+      actorName: session?.username,
+      targetType: "Voter",
+      targetId: id,
+      targetName: voter?.lrn,
+      detail: `Deleted voter LRN "${voter?.lrn}" (${voter?.section.name})`,
+    });
+
     revalidatePath("/dashboard/voters");
     return { success: true };
   } catch {
@@ -78,7 +124,20 @@ export async function deleteVoter(id: string) {
 }
 
 export async function deleteAllVoters() {
+  const count = await db.voter.count();
   await db.voter.deleteMany();
+
+  const session = await getSession();
+  await logAdminAction({
+    action: "VOTERS_ALL_DELETED",
+    category: "VOTER_MGMT",
+    severity: "ERROR",
+    actorId: session?.adminId,
+    actorName: session?.username,
+    detail: `Deleted all voters (${count} total)`,
+    metadata: { deletedCount: count },
+  });
+
   revalidatePath("/dashboard/voters");
   return { success: true };
 }
@@ -153,6 +212,16 @@ export async function importVoters(
     skipped > 0
       ? `Imported ${imported} voter(s). Skipped ${skipped} existing LRN(s).`
       : `Imported ${imported} voter(s).`;
+
+  const session = await getSession();
+  await logAdminAction({
+    action: "VOTERS_IMPORTED",
+    category: "VOTER_MGMT",
+    actorId: session?.adminId,
+    actorName: session?.username,
+    detail: message,
+    metadata: { totalRows: rows.length, imported, skipped },
+  });
 
   return { success: true, message };
 }

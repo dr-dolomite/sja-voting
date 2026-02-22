@@ -1,7 +1,9 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { logAdminAction } from "@/lib/logger";
 
 export async function getPositions(electionId: string) {
   return db.position.findMany({
@@ -27,8 +29,22 @@ export async function createPosition(formData: FormData) {
     return { error: "Display order must be a positive number." };
   }
 
-  await db.position.create({
+  const position = await db.position.create({
     data: { name, order, maxVotes, electionId },
+  });
+
+  const session = await getSession();
+  const election = await db.election.findUnique({ where: { id: electionId } });
+  await logAdminAction({
+    action: "POSITION_CREATED",
+    category: "POSITION",
+    actorId: session?.adminId,
+    actorName: session?.username,
+    targetType: "Position",
+    targetId: position.id,
+    targetName: name,
+    detail: `Created position "${name}" in election "${election?.name}"`,
+    metadata: { electionId, order, maxVotes },
   });
 
   revalidatePath(`/dashboard/elections/${electionId}`);
@@ -50,9 +66,27 @@ export async function updatePosition(formData: FormData) {
     return { error: "Display order must be a positive number." };
   }
 
+  const existing = await db.position.findUnique({ where: { id } });
   await db.position.update({
     where: { id },
     data: { name, order, maxVotes },
+  });
+
+  const session = await getSession();
+  await logAdminAction({
+    action: "POSITION_UPDATED",
+    category: "POSITION",
+    actorId: session?.adminId,
+    actorName: session?.username,
+    targetType: "Position",
+    targetId: id,
+    targetName: name,
+    detail: `Updated position "${existing?.name}" → "${name}"`,
+    metadata: {
+      oldName: existing?.name, newName: name,
+      oldOrder: existing?.order, newOrder: order,
+      oldMaxVotes: existing?.maxVotes, newMaxVotes: maxVotes,
+    },
   });
 
   revalidatePath(`/dashboard/elections/${electionId}`);
@@ -60,8 +94,24 @@ export async function updatePosition(formData: FormData) {
 }
 
 export async function deletePosition(id: string, electionId: string) {
+  const position = await db.position.findUnique({ where: { id } });
   try {
     await db.position.delete({ where: { id } });
+
+    const session = await getSession();
+    const election = await db.election.findUnique({ where: { id: electionId } });
+    await logAdminAction({
+      action: "POSITION_DELETED",
+      category: "POSITION",
+      severity: "WARNING",
+      actorId: session?.adminId,
+      actorName: session?.username,
+      targetType: "Position",
+      targetId: id,
+      targetName: position?.name,
+      detail: `Deleted position "${position?.name}" from election "${election?.name}"`,
+    });
+
     revalidatePath(`/dashboard/elections/${electionId}`);
     return { success: true };
   } catch {

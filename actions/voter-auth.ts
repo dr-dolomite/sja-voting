@@ -1,9 +1,10 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { signVoterToken, VOTER_COOKIE } from "@/lib/auth";
+import { signVoterToken, getVoterSession, VOTER_COOKIE } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { logVoterAction } from "@/lib/logger";
 
 export async function voterLoginAction(
   _prevState: { error: string } | null,
@@ -21,10 +22,25 @@ export async function voterLoginAction(
   });
 
   if (!voter) {
+    await logVoterAction({
+      action: "VOTER_LOGIN_FAILED",
+      category: "AUTH",
+      severity: "WARNING",
+      actorName: lrn,
+      detail: `Voter login failed — LRN "${lrn}" not found`,
+    });
     return { error: "LRN not found. Please check and try again." };
   }
 
   if (voter.hasVoted) {
+    await logVoterAction({
+      action: "VOTER_LOGIN_ALREADY_VOTED",
+      category: "AUTH",
+      severity: "WARNING",
+      actorId: voter.id,
+      actorName: voter.lrn,
+      detail: `Voter LRN "${voter.lrn}" attempted login but has already voted`,
+    });
     redirect("/vote/already-voted");
   }
 
@@ -34,6 +50,14 @@ export async function voterLoginAction(
   });
 
   if (!activeElection) {
+    await logVoterAction({
+      action: "VOTER_LOGIN_NO_ELECTION",
+      category: "AUTH",
+      severity: "WARNING",
+      actorId: voter.id,
+      actorName: voter.lrn,
+      detail: `Voter LRN "${voter.lrn}" attempted login but no active election`,
+    });
     return { error: "No active election at this time." };
   }
 
@@ -51,11 +75,32 @@ export async function voterLoginAction(
     maxAge: 60 * 60 * 4, // 4 hours
   });
 
+  await logVoterAction({
+    action: "VOTER_LOGIN_SUCCESS",
+    category: "AUTH",
+    actorId: voter.id,
+    actorName: voter.lrn,
+    detail: `Voter LRN "${voter.lrn}" (${voter.section.name}) logged in`,
+    metadata: { sectionId: voter.sectionId, sectionName: voter.section.name },
+  });
+
   redirect("/vote");
 }
 
 export async function voterLogoutAction() {
+  const session = await getVoterSession();
   const cookieStore = await cookies();
   cookieStore.delete(VOTER_COOKIE);
+
+  if (session) {
+    await logVoterAction({
+      action: "VOTER_LOGOUT",
+      category: "AUTH",
+      actorId: session.voterId,
+      actorName: session.lrn,
+      detail: `Voter LRN "${session.lrn}" logged out`,
+    });
+  }
+
   redirect("/vote/login");
 }

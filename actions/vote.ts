@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { getVoterSession, VOTER_COOKIE } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { logVoterAction, logSystemEvent } from "@/lib/logger";
 
 /** Fetch the active election with positions, candidates, and partylists. */
 export async function getActiveBallot() {
@@ -28,7 +29,15 @@ export async function getActiveBallot() {
 /** Submit votes for all positions at once. */
 export async function submitVotes(candidateIds: string[]) {
   const session = await getVoterSession();
-  if (!session) return { error: "Not authenticated." };
+  if (!session) {
+    await logSystemEvent({
+      action: "VOTE_REJECTED_NO_SESSION",
+      category: "VOTE",
+      severity: "ERROR",
+      detail: "Vote attempt with no voter session",
+    });
+    return { error: "Not authenticated." };
+  }
 
   // Re-check voter status
   const voter = await db.voter.findUnique({
@@ -36,7 +45,18 @@ export async function submitVotes(candidateIds: string[]) {
   });
 
   if (!voter) return { error: "Voter not found." };
-  if (voter.hasVoted) return { error: "You have already voted." };
+
+  if (voter.hasVoted) {
+    await logVoterAction({
+      action: "VOTE_REJECTED_ALREADY_VOTED",
+      category: "VOTE",
+      severity: "ERROR",
+      actorId: voter.id,
+      actorName: voter.lrn,
+      detail: `Double-vote attempt by LRN "${voter.lrn}"`,
+    });
+    return { error: "You have already voted." };
+  }
 
   // Verify active election exists
   const election = await db.election.findFirst({
@@ -48,7 +68,17 @@ export async function submitVotes(candidateIds: string[]) {
     },
   });
 
-  if (!election) return { error: "No active election." };
+  if (!election) {
+    await logVoterAction({
+      action: "VOTE_REJECTED_NO_ELECTION",
+      category: "VOTE",
+      severity: "ERROR",
+      actorId: voter.id,
+      actorName: voter.lrn,
+      detail: `Vote rejected for LRN "${voter.lrn}" — no active election`,
+    });
+    return { error: "No active election." };
+  }
 
   // Validate candidate IDs belong to this election
   const validCandidateIds = new Set(
@@ -57,6 +87,15 @@ export async function submitVotes(candidateIds: string[]) {
 
   for (const id of candidateIds) {
     if (!validCandidateIds.has(id)) {
+      await logVoterAction({
+        action: "VOTE_REJECTED_INVALID_CANDIDATES",
+        category: "VOTE",
+        severity: "ERROR",
+        actorId: voter.id,
+        actorName: voter.lrn,
+        detail: `Vote rejected for LRN "${voter.lrn}" — invalid candidate ID`,
+        metadata: { invalidId: id, submittedIds: candidateIds },
+      });
       return { error: "Invalid candidate selection." };
     }
   }
@@ -67,6 +106,18 @@ export async function submitVotes(candidateIds: string[]) {
       position.candidates.some((c) => c.id === id),
     );
     if (selectedForPosition.length > position.maxVotes) {
+      await logVoterAction({
+        action: "VOTE_REJECTED_MAX_EXCEEDED",
+        category: "VOTE",
+        severity: "ERROR",
+        actorId: voter.id,
+        actorName: voter.lrn,
+        targetType: "Position",
+        targetId: position.id,
+        targetName: position.name,
+        detail: `Vote rejected for LRN "${voter.lrn}" — too many selections for "${position.name}" (${selectedForPosition.length}/${position.maxVotes})`,
+        metadata: { selected: selectedForPosition.length, max: position.maxVotes },
+      });
       return {
         error: `Too many selections for ${position.name}. Max: ${position.maxVotes}.`,
       };
@@ -85,6 +136,27 @@ export async function submitVotes(candidateIds: string[]) {
       data: { hasVoted: true, votedAt: new Date() },
     }),
   ]);
+
+  await logVoterAction({
+    action: "VOTE_SUBMITTED",
+    category: "VOTE",
+    actorId: voter.id,
+    actorName: voter.lrn,
+    targetType: "Election",
+    targetId: election.id,
+    targetName: election.name,
+    detail: `LRN "${voter.lrn}" cast ${candidateIds.length} vote(s) in "${election.name}"`,
+    metadata: {
+      candidateIds,
+      positionBreakdown: election.positions.map((p) => ({
+        positionId: p.id,
+        positionName: p.name,
+        selected: candidateIds.filter((id) =>
+          p.candidates.some((c) => c.id === id),
+        ).length,
+      })),
+    },
+  });
 
   // Clear voter session after voting
   const cookieStore = await cookies();

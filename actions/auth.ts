@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { signToken } from "@/lib/auth";
+import { signToken, getSession } from "@/lib/auth";
 import { compare } from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { logAdminAction } from "@/lib/logger";
 
 export async function loginAction(
   _prevState: { error: string } | null,
@@ -20,12 +21,27 @@ export async function loginAction(
   const admin = await db.admin.findUnique({ where: { username } });
 
   if (!admin) {
+    await logAdminAction({
+      action: "ADMIN_LOGIN_FAILED",
+      category: "AUTH",
+      severity: "WARNING",
+      actorName: username,
+      detail: `Failed login attempt for username "${username}" — user not found`,
+    });
     return { error: "Invalid username or password." };
   }
 
   const valid = await compare(password, admin.password);
 
   if (!valid) {
+    await logAdminAction({
+      action: "ADMIN_LOGIN_FAILED",
+      category: "AUTH",
+      severity: "WARNING",
+      actorId: admin.id,
+      actorName: admin.username,
+      detail: `Failed login attempt for username "${admin.username}" — wrong password`,
+    });
     return { error: "Invalid username or password." };
   }
 
@@ -43,11 +59,31 @@ export async function loginAction(
     maxAge: 60 * 60 * 24, // 24 hours
   });
 
+  await logAdminAction({
+    action: "ADMIN_LOGIN_SUCCESS",
+    category: "AUTH",
+    actorId: admin.id,
+    actorName: admin.username,
+    detail: `Admin "${admin.username}" logged in`,
+  });
+
   redirect("/dashboard");
 }
 
 export async function logoutAction() {
+  const session = await getSession();
   const cookieStore = await cookies();
   cookieStore.delete("session");
+
+  if (session) {
+    await logAdminAction({
+      action: "ADMIN_LOGOUT",
+      category: "AUTH",
+      actorId: session.adminId,
+      actorName: session.username,
+      detail: `Admin "${session.username}" logged out`,
+    });
+  }
+
   redirect("/login");
 }

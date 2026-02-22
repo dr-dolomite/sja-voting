@@ -13,6 +13,7 @@ import {
   BarChart3,
   Trophy,
   PieChart,
+  ScrollText,
   LogOut,
 } from "lucide-react";
 
@@ -69,6 +70,11 @@ const navItems = [
     title: "Admins",
     href: "/dashboard/admins",
     icon: ShieldCheck,
+  },
+  {
+    title: "Audit Logs",
+    href: "/dashboard/logs",
+    icon: ScrollText,
   },
 ];
 
