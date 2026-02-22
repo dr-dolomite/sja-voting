@@ -11,18 +11,18 @@
 
 - [/] Server actions for election CRUD
 - [/] Server actions for position CRUD (within elections)
-- [ ] Election list page
-- [ ] Election detail page with position management
+- [/] Election list page
+- [/] Election detail page with position management
 
 ## Phase 3: Partylist Management
 
-- [ ] Server actions for partylist CRUD
-- [ ] Partylist list page with create/edit/delete
+- [/] Server actions for partylist CRUD
+- [/] Partylist list page with create/edit/delete
 
 ## Phase 4: Voter Management
 
-- [ ] Server actions for voter CRUD + spreadsheet import
-- [ ] Voter list page with import UI
+- [/] Server actions for voter CRUD + spreadsheet import
+- [/] Voter list page with import UI
 
 ## Phase 5: Candidate Management
 
