@@ -236,17 +236,17 @@ export function VoterList({
         </select>
         <div className="ml-auto flex gap-2">
           <Button variant="outline" onClick={() => setImportOpen(true)}>
-            <Upload className="mr-2 size-4" />
+            <Upload className="size-4" />
             Import CSV
           </Button>
           {voters.length > 0 && (
             <Button variant="outline" onClick={() => setDeleteAllOpen(true)}>
-              <Trash className="mr-2 size-4" />
+              <Trash className="size-4" />
               Delete All
             </Button>
           )}
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="mr-2 size-4" />
+            <Plus className="size-4" />
             Add Voter
           </Button>
         </div>
@@ -312,7 +312,7 @@ export function VoterList({
                             setEditOpen(true);
                           }}
                         >
-                          <Pencil className="mr-2 size-4" />
+                          <Pencil className="size-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -322,7 +322,7 @@ export function VoterList({
                             setDeleteOpen(true);
                           }}
                         >
-                          <Trash2 className="mr-2 size-4" />
+                          <Trash2 className="size-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
