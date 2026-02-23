@@ -260,7 +260,7 @@ export function ResultsDashboard({
       {turnout && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Total Voters */}
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card to-card/80 shadow-sm">
+          <Card className="relative overflow-hidden border-0 bg-linear-to-br from-card to-card/80 shadow-sm">
             <div className="absolute top-0 right-0 -mt-4 -mr-4 size-24 rounded-full bg-blue-500/5" />
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -283,7 +283,7 @@ export function ResultsDashboard({
           </Card>
 
           {/* Votes Cast */}
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card to-card/80 shadow-sm">
+          <Card className="relative overflow-hidden border-0 bg-linear-to-brfrom-card to-card/80 shadow-sm">
             <div className="absolute top-0 right-0 -mt-4 -mr-4 size-24 rounded-full bg-emerald-500/5" />
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -306,7 +306,7 @@ export function ResultsDashboard({
           </Card>
 
           {/* Positions */}
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card to-card/80 shadow-sm">
+          <Card className="relative overflow-hidden border-0 bg-linear-to-brfrom-card to-card/80 shadow-sm">
             <div className="absolute top-0 right-0 -mt-4 -mr-4 size-24 rounded-full bg-purple-500/5" />
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -327,7 +327,7 @@ export function ResultsDashboard({
           </Card>
 
           {/* Overall Turnout */}
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card to-card/80 shadow-sm">
+          <Card className="relative overflow-hidden border-0 bg-linear-to-brfrom-card to-card/80 shadow-sm">
             <div className="absolute top-0 right-0 -mt-4 -mr-4 size-24 rounded-full bg-amber-500/5" />
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -389,7 +389,6 @@ export function ResultsDashboard({
                         const isLeader = c.rank === 1 && c.votes > 0;
                         const gradientPair =
                           GRADIENT_PAIRS[i % GRADIENT_PAIRS.length];
-                        const barColor = c.partylist.color ?? COLORS[i % COLORS.length];
                         return (
                           <div
                             key={c.id}
