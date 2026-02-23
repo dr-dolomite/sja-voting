@@ -22,7 +22,7 @@ export async function createPosition(formData: FormData) {
   const maxVotes = parseInt(formData.get("maxVotes") as string, 10) || 1;
   const gradeLevelRaw = (formData.get("gradeLevel") as string)?.trim();
   const gradeLevel =
-    gradeLevelRaw && gradeLevelRaw.toLowerCase() !== "all"
+    gradeLevelRaw && gradeLevelRaw.toLowerCase() !== "all grades"
       ? gradeLevelRaw
       : null;
 
@@ -64,7 +64,7 @@ export async function updatePosition(formData: FormData) {
   const maxVotes = parseInt(formData.get("maxVotes") as string, 10) || 1;
   const gradeLevelRaw = (formData.get("gradeLevel") as string)?.trim();
   const gradeLevel =
-    gradeLevelRaw && gradeLevelRaw.toLowerCase() !== "all"
+    gradeLevelRaw && gradeLevelRaw.toLowerCase() !== "all grades"
       ? gradeLevelRaw
       : null;
 
