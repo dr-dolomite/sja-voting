@@ -67,6 +67,8 @@ export async function voterLoginAction(
   });
 
   const cookieStore = await cookies();
+  // Clear any active admin session (mutually exclusive logins)
+  cookieStore.delete("session");
   cookieStore.set(VOTER_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

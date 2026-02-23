@@ -51,12 +51,14 @@ export async function loginAction(
   });
 
   const cookieStore = await cookies();
+  // Clear any active voter session (mutually exclusive logins)
+  cookieStore.delete("voter-session");
   cookieStore.set("session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24, // 24 hours
+    maxAge: 60 * 60, // 1 hour (rolling session extends this in proxy.ts)
   });
 
   await logAdminAction({

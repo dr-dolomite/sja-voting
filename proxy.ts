@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken, verifyVoterToken } from "@/lib/auth";
+import { verifyToken, verifyVoterToken, signToken } from "@/lib/auth";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -25,7 +25,21 @@ export async function proxy(request: NextRequest) {
     if (!session) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-    return NextResponse.next();
+
+    // Rolling session: re-issue a fresh 1-hour JWT on every dashboard request
+    const newToken = await signToken({
+      adminId: session.adminId,
+      username: session.username,
+    });
+    const response = NextResponse.next();
+    response.cookies.set("session", newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60, // 1 hour
+    });
+    return response;
   }
 
   // ─── Voter routes ──────────────────────────────────────────
@@ -41,10 +55,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Allow post-vote pages without auth (cookie is cleared after voting)
-  if (
-    pathname === "/vote/success" ||
-    pathname === "/vote/already-voted"
-  ) {
+  if (pathname === "/vote/success" || pathname === "/vote/already-voted") {
     return NextResponse.next();
   }
 
