@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Search,
   Download,
   ChevronLeft,
   ChevronRight,
@@ -12,6 +11,7 @@ import {
   User,
   Monitor,
   X,
+  SearchIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 
 import { getAuditLogsForExport } from "@/actions/logs";
 import type { AuditLogEntry } from "@/actions/logs";
@@ -87,9 +92,12 @@ function categoryColor(category: string) {
   const colors: Record<string, string> = {
     AUTH: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
     VOTE: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    ELECTION: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-    POSITION: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
-    CANDIDATE: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+    ELECTION:
+      "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+    POSITION:
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
+    CANDIDATE:
+      "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
     PARTYLIST: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
     VOTER_MGMT: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
     ADMIN_MGMT: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
@@ -111,7 +119,20 @@ function actorIcon(actorType: string) {
 
 function formatTimestamp(date: Date) {
   const d = new Date(date);
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   const month = months[d.getUTCMonth()];
   const day = d.getUTCDate();
   const h = d.getUTCHours();
@@ -228,22 +249,19 @@ export function AuditLogTable({
   return (
     <>
       {/* Filters toolbar */}
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-1 items-center gap-2 min-w-50">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-            <Input
-              placeholder="Search logs..."
-              className="pl-9"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            />
-          </div>
-          <Button variant="outline" size="sm" onClick={handleSearch}>
-            Search
-          </Button>
-        </div>
+      <div className="flex flex-wrap items-end gap-4">
+        <InputGroup className="max-w-md">
+          <InputGroupInput
+            placeholder="Search logs..."
+            className="pl-9"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          />
+          <InputGroupAddon align="inline-start">
+            <SearchIcon className="text-muted-foreground" />
+          </InputGroupAddon>
+        </InputGroup>
 
         <Select
           value={filters.category ?? "all"}
@@ -324,23 +342,23 @@ export function AuditLogTable({
 
         {hasFilters && (
           <Button
-            variant="ghost"
             size="sm"
+            className=""
             onClick={() => router.push("/dashboard/logs")}
           >
-            <X className="size-4 mr-1" />
-            Clear
+            <X className="size-4" />
+            Clear Filters
           </Button>
         )}
 
         <Button
-          variant="outline"
           size="sm"
           onClick={handleExport}
           disabled={exporting}
+          className="ml-6"
         >
-          <Download className="size-4 mr-1" />
-          {exporting ? "Exporting..." : "CSV"}
+          <Download className="size-4" />
+          {exporting ? "Exporting..." : "Export as CSV"}
         </Button>
       </div>
 
@@ -366,7 +384,10 @@ export function AuditLogTable({
           <TableBody>
             {logs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={6}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   No logs found.
                 </TableCell>
               </TableRow>
@@ -378,7 +399,12 @@ export function AuditLogTable({
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={severityColor(log.severity) as "destructive" | "outline" | "secondary"}
+                      variant={
+                        severityColor(log.severity) as
+                          | "destructive"
+                          | "outline"
+                          | "secondary"
+                      }
                       className={severityTextClass(log.severity)}
                     >
                       {log.severity}
@@ -400,7 +426,9 @@ export function AuditLogTable({
                     </div>
                   </TableCell>
                   <TableCell className="max-w-75">
-                    <p className="text-sm truncate">{log.detail ?? log.action}</p>
+                    <p className="text-sm truncate">
+                      {log.detail ?? log.action}
+                    </p>
                     {log.targetName && (
                       <p className="text-xs text-muted-foreground truncate">
                         Target: {log.targetName}
@@ -472,7 +500,12 @@ export function AuditLogTable({
                 <div>
                   <p className="text-muted-foreground">Severity</p>
                   <Badge
-                    variant={severityColor(detailLog.severity) as "destructive" | "outline" | "secondary"}
+                    variant={
+                      severityColor(detailLog.severity) as
+                        | "destructive"
+                        | "outline"
+                        | "secondary"
+                    }
                     className={severityTextClass(detailLog.severity)}
                   >
                     {detailLog.severity}
@@ -507,7 +540,8 @@ export function AuditLogTable({
                   <div>
                     <p className="text-muted-foreground">Target</p>
                     <p>
-                      {detailLog.targetType}: {detailLog.targetName ?? detailLog.targetId}
+                      {detailLog.targetType}:{" "}
+                      {detailLog.targetName ?? detailLog.targetId}
                     </p>
                   </div>
                 )}
