@@ -40,6 +40,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 
 import {
@@ -228,9 +229,7 @@ export function AdminList({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Admin</DialogTitle>
-            <DialogDescription>
-              Create a new admin account.
-            </DialogDescription>
+            <DialogDescription>Create a new admin account.</DialogDescription>
           </DialogHeader>
           <form action={handleCreate}>
             <div className="space-y-4 py-4">
@@ -245,10 +244,9 @@ export function AdminList({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="create-admin-password">Password</Label>
-                <Input
+                <PasswordInput
                   id="create-admin-password"
                   name="password"
-                  type="password"
                   placeholder="Min. 6 characters"
                   required
                   minLength={6}
@@ -319,10 +317,9 @@ export function AdminList({
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="change-admin-password">New Password</Label>
-                <Input
+                <PasswordInput
                   id="change-admin-password"
                   name="password"
-                  type="password"
                   placeholder="Min. 6 characters"
                   required
                   minLength={6}

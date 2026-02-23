@@ -1,16 +1,12 @@
 "use client";
 
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import { useActionState } from "react";
 import { loginAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { EyeOffIcon, TriangleAlertIcon } from "lucide-react";
+import { TriangleAlertIcon } from "lucide-react";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
@@ -34,18 +30,12 @@ export function LoginForm() {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="password">Password</FieldLabel>
-            <InputGroup>
-              <InputGroupInput
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Enter password"
-                required
-              />
-              <InputGroupAddon align="inline-end">
-                <EyeOffIcon />
-              </InputGroupAddon>
-            </InputGroup>
+            <PasswordInput
+              id="password"
+              name="password"
+              placeholder="Enter password"
+              required
+            />
           </Field>
         </FieldGroup>
 

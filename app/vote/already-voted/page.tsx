@@ -13,7 +13,7 @@ import {
 
 export default function AlreadyVotedPage() {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(10);
+  const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
     const timer = setInterval(() => {
