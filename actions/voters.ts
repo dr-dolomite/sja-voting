@@ -25,9 +25,11 @@ export async function getVoters() {
 export async function createVoter(formData: FormData) {
   const lrn = (formData.get("lrn") as string)?.trim();
   const sectionName = (formData.get("section") as string)?.trim();
+  const gradeLevel = (formData.get("gradeLevel") as string)?.trim();
 
   if (!lrn) return { error: "LRN is required." };
   if (!sectionName) return { error: "Section is required." };
+  if (!gradeLevel) return { error: "Grade Level is required." };
 
   const existing = await db.voter.findUnique({ where: { lrn } });
   if (existing) return { error: "A voter with this LRN already exists." };
@@ -36,7 +38,7 @@ export async function createVoter(formData: FormData) {
   const section = await db.section.upsert({
     where: { name: sectionName },
     update: {},
-    create: { name: sectionName },
+    create: { name: sectionName, gradeLevel },
   });
 
   const voter = await db.voter.create({ data: { lrn, sectionId: section.id } });
@@ -62,9 +64,11 @@ export async function updateVoter(formData: FormData) {
   const id = formData.get("id") as string;
   const lrn = (formData.get("lrn") as string)?.trim();
   const sectionName = (formData.get("section") as string)?.trim();
+  const gradeLevel = (formData.get("gradeLevel") as string)?.trim();
 
   if (!lrn) return { error: "LRN is required." };
   if (!sectionName) return { error: "Section is required." };
+  if (!gradeLevel) return { error: "Grade Level is required." };
 
   // Check uniqueness (exclude self)
   const existing = await db.voter.findFirst({
@@ -75,11 +79,17 @@ export async function updateVoter(formData: FormData) {
   const section = await db.section.upsert({
     where: { name: sectionName },
     update: {},
-    create: { name: sectionName },
+    create: { name: sectionName, gradeLevel },
   });
 
-  const old = await db.voter.findUnique({ where: { id }, include: { section: true } });
-  await db.voter.update({ where: { id }, data: { lrn, sectionId: section.id } });
+  const old = await db.voter.findUnique({
+    where: { id },
+    include: { section: true },
+  });
+  await db.voter.update({
+    where: { id },
+    data: { lrn, sectionId: section.id },
+  });
 
   const session = await getSession();
   await logAdminAction({
@@ -91,7 +101,12 @@ export async function updateVoter(formData: FormData) {
     targetId: id,
     targetName: lrn,
     detail: `Updated voter "${old?.lrn}" → "${lrn}"`,
-    metadata: { oldLrn: old?.lrn, newLrn: lrn, oldSection: old?.section.name, newSection: sectionName },
+    metadata: {
+      oldLrn: old?.lrn,
+      newLrn: lrn,
+      oldSection: old?.section.name,
+      newSection: sectionName,
+    },
   });
 
   revalidatePath("/dashboard/voters");
@@ -99,7 +114,10 @@ export async function updateVoter(formData: FormData) {
 }
 
 export async function deleteVoter(id: string) {
-  const voter = await db.voter.findUnique({ where: { id }, include: { section: true } });
+  const voter = await db.voter.findUnique({
+    where: { id },
+    include: { section: true },
+  });
   try {
     await db.voter.delete({ where: { id } });
 
@@ -145,7 +163,7 @@ export async function deleteAllVoters() {
 // ─── Spreadsheet import ─────────────────────────────────────────
 
 export async function importVoters(
-  rows: { lrn: string; section: string }[],
+  rows: { lrn: string; section: string; gradeLevel: string }[],
 ) {
   if (!rows.length) return { error: "No data to import." };
 
@@ -154,13 +172,17 @@ export async function importVoters(
   const seen = new Set<string>();
 
   for (let i = 0; i < rows.length; i++) {
-    const { lrn, section } = rows[i];
+    const { lrn, section, gradeLevel } = rows[i];
     if (!lrn?.trim()) {
       errors.push(`Row ${i + 1}: LRN is empty.`);
       continue;
     }
     if (!section?.trim()) {
       errors.push(`Row ${i + 1}: Section is empty.`);
+      continue;
+    }
+    if (!gradeLevel?.trim()) {
+      errors.push(`Row ${i + 1}: Grade Level is empty.`);
       continue;
     }
     if (seen.has(lrn.trim())) {
@@ -171,19 +193,26 @@ export async function importVoters(
   }
 
   if (errors.length > 0) {
-    return { error: errors.slice(0, 5).join("\n") + (errors.length > 5 ? `\n…and ${errors.length - 5} more errors.` : "") };
+    return {
+      error:
+        errors.slice(0, 5).join("\n") +
+        (errors.length > 5 ? `\n…and ${errors.length - 5} more errors.` : ""),
+    };
   }
 
-  // Collect unique sections
-  const sectionNames = [...new Set(rows.map((r) => r.section.trim()))];
+  // Collect unique sections (section name -> gradeLevel)
+  const sectionEntries = new Map<string, string>();
+  for (const row of rows) {
+    sectionEntries.set(row.section.trim(), row.gradeLevel.trim());
+  }
 
   // Upsert all sections
   const sectionMap = new Map<string, string>();
-  for (const name of sectionNames) {
+  for (const [name, gradeLevel] of sectionEntries) {
     const section = await db.section.upsert({
       where: { name },
       update: {},
-      create: { name },
+      create: { name, gradeLevel },
     });
     sectionMap.set(name, section.id);
   }

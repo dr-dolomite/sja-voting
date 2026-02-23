@@ -6,8 +6,16 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { logVoterAction, logSystemEvent } from "@/lib/logger";
 
-/** Fetch the active election with positions, candidates, and partylists. */
-export async function getActiveBallot() {
+/** Fetch the active election with positions filtered by the voter's grade level. */
+export async function getActiveBallot(voterId: string) {
+  // Look up the voter's grade level via their section
+  const voter = await db.voter.findUnique({
+    where: { id: voterId },
+    include: { section: true },
+  });
+
+  const voterGradeLevel = voter?.section?.gradeLevel ?? null;
+
   const election = await db.election.findFirst({
     where: { isActive: true },
     include: {
@@ -23,7 +31,15 @@ export async function getActiveBallot() {
     },
   });
 
-  return election;
+  if (!election) return null;
+
+  // Filter positions: show universal positions (gradeLevel is null) and
+  // positions matching the voter's grade level
+  const filteredPositions = election.positions.filter(
+    (p) => p.gradeLevel === null || p.gradeLevel === voterGradeLevel,
+  );
+
+  return { ...election, positions: filteredPositions };
 }
 
 /** Submit votes for all positions at once. */
@@ -116,7 +132,10 @@ export async function submitVotes(candidateIds: string[]) {
         targetId: position.id,
         targetName: position.name,
         detail: `Vote rejected for LRN "${voter.lrn}" — too many selections for "${position.name}" (${selectedForPosition.length}/${position.maxVotes})`,
-        metadata: { selected: selectedForPosition.length, max: position.maxVotes },
+        metadata: {
+          selected: selectedForPosition.length,
+          max: position.maxVotes,
+        },
       });
       return {
         error: `Too many selections for ${position.name}. Max: ${position.maxVotes}.`,

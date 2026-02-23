@@ -52,9 +52,20 @@ type Position = {
   name: string;
   order: number;
   maxVotes: number;
+  gradeLevel: string | null;
   electionId: string;
   _count: { candidates: number };
 };
+
+const GRADE_LEVELS = [
+  "All Grades",
+  "Grade 7",
+  "Grade 8",
+  "Grade 9",
+  "Grade 10",
+  "Grade 11",
+  "Grade 12",
+];
 
 export function PositionList({
   positions,
@@ -147,6 +158,7 @@ export function PositionList({
               <TableRow>
                 <TableHead className="w-20">Order</TableHead>
                 <TableHead>Position</TableHead>
+                <TableHead>Grade Level</TableHead>
                 <TableHead>Max Votes</TableHead>
                 <TableHead>Candidates</TableHead>
                 <TableHead className="w-12.5" />
@@ -157,6 +169,7 @@ export function PositionList({
                 <TableRow key={position.id}>
                   <TableCell>{position.order}</TableCell>
                   <TableCell className="font-medium">{position.name}</TableCell>
+                  <TableCell>{position.gradeLevel ?? "All Grades"}</TableCell>
                   <TableCell>{position.maxVotes}</TableCell>
                   <TableCell>{position._count.candidates}</TableCell>
                   <TableCell>
@@ -218,6 +231,21 @@ export function PositionList({
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-pos-gradelevel">Grade Level</Label>
+                <select
+                  id="create-pos-gradelevel"
+                  name="gradeLevel"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
+                  defaultValue="All Grades"
+                >
+                  {GRADE_LEVELS.map((gl) => (
+                    <option key={gl} value={gl}>
+                      {gl}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="create-pos-order">Display Order</Label>
@@ -276,6 +304,21 @@ export function PositionList({
                   defaultValue={selected?.name ?? ""}
                   required
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-pos-gradelevel">Grade Level</Label>
+                <select
+                  id="edit-pos-gradelevel"
+                  name="gradeLevel"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
+                  defaultValue={selected?.gradeLevel ?? "All Grades"}
+                >
+                  {GRADE_LEVELS.map((gl) => (
+                    <option key={gl} value={gl}>
+                      {gl}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

@@ -21,9 +21,10 @@ model Admin {
 }
 
 model Section {
-  id     String  @id @default(cuid())
-  name   String  @unique
-  voters Voter[]
+  id         String  @id @default(cuid())
+  name       String  @unique
+  gradeLevel String
+  voters     Voter[]
 }
 
 model Voter {
@@ -50,6 +51,7 @@ model Position {
   name       String
   order      Int
   maxVotes   Int         @default(1)
+  gradeLevel String?
   electionId String
   election   Election    @relation(fields: [electionId], references: [id], onDelete: Cascade)
   candidates Candidate[]
@@ -88,8 +90,8 @@ model Vote {
 // ─── Audit Logging ──────────────────────────────────────────────
 
 model AuditLog {
-  id        String      @id @default(cuid())
-  timestamp DateTime    @default(now())
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
 
   // Who performed the action
   actorType ActorType

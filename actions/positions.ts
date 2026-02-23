@@ -20,6 +20,11 @@ export async function createPosition(formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   const order = parseInt(formData.get("order") as string, 10);
   const maxVotes = parseInt(formData.get("maxVotes") as string, 10) || 1;
+  const gradeLevelRaw = (formData.get("gradeLevel") as string)?.trim();
+  const gradeLevel =
+    gradeLevelRaw && gradeLevelRaw.toLowerCase() !== "all"
+      ? gradeLevelRaw
+      : null;
 
   if (!name) {
     return { error: "Position name is required." };
@@ -30,7 +35,7 @@ export async function createPosition(formData: FormData) {
   }
 
   const position = await db.position.create({
-    data: { name, order, maxVotes, electionId },
+    data: { name, order, maxVotes, gradeLevel, electionId },
   });
 
   const session = await getSession();
@@ -57,6 +62,11 @@ export async function updatePosition(formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   const order = parseInt(formData.get("order") as string, 10);
   const maxVotes = parseInt(formData.get("maxVotes") as string, 10) || 1;
+  const gradeLevelRaw = (formData.get("gradeLevel") as string)?.trim();
+  const gradeLevel =
+    gradeLevelRaw && gradeLevelRaw.toLowerCase() !== "all"
+      ? gradeLevelRaw
+      : null;
 
   if (!name) {
     return { error: "Position name is required." };
@@ -69,7 +79,7 @@ export async function updatePosition(formData: FormData) {
   const existing = await db.position.findUnique({ where: { id } });
   await db.position.update({
     where: { id },
-    data: { name, order, maxVotes },
+    data: { name, order, maxVotes, gradeLevel },
   });
 
   const session = await getSession();
@@ -83,9 +93,12 @@ export async function updatePosition(formData: FormData) {
     targetName: name,
     detail: `Updated position "${existing?.name}" → "${name}"`,
     metadata: {
-      oldName: existing?.name, newName: name,
-      oldOrder: existing?.order, newOrder: order,
-      oldMaxVotes: existing?.maxVotes, newMaxVotes: maxVotes,
+      oldName: existing?.name,
+      newName: name,
+      oldOrder: existing?.order,
+      newOrder: order,
+      oldMaxVotes: existing?.maxVotes,
+      newMaxVotes: maxVotes,
     },
   });
 
@@ -99,7 +112,9 @@ export async function deletePosition(id: string, electionId: string) {
     await db.position.delete({ where: { id } });
 
     const session = await getSession();
-    const election = await db.election.findUnique({ where: { id: electionId } });
+    const election = await db.election.findUnique({
+      where: { id: electionId },
+    });
     await logAdminAction({
       action: "POSITION_DELETED",
       category: "POSITION",

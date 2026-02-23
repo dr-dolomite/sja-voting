@@ -16,7 +16,7 @@ export default async function VotePage() {
   if (!voter) redirect("/vote/login");
   if (voter.hasVoted) redirect("/vote/already-voted");
 
-  const election = await getActiveBallot();
+  const election = await getActiveBallot(session.voterId);
 
   if (!election) {
     return (

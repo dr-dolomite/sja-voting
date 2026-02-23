@@ -63,8 +63,17 @@ type Voter = {
   hasVoted: boolean;
   votedAt: Date | null;
   createdAt: Date;
-  section: { id: string; name: string };
+  section: { id: string; name: string; gradeLevel: string };
 };
+
+const GRADE_LEVELS = [
+  "Grade 7",
+  "Grade 8",
+  "Grade 9",
+  "Grade 10",
+  "Grade 11",
+  "Grade 12",
+];
 
 export function VoterList({
   voters,
@@ -85,7 +94,7 @@ export function VoterList({
   const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importPreview, setImportPreview] = useState<
-    { lrn: string; section: string }[] | null
+    { lrn: string; section: string; gradeLevel: string }[] | null
   >(null);
 
   const filteredVoters = voters.filter((v) => {
@@ -168,7 +177,9 @@ export function VoterList({
     reader.readAsText(file);
   }
 
-  function parseCSV(text: string): { lrn: string; section: string }[] {
+  function parseCSV(
+    text: string,
+  ): { lrn: string; section: string; gradeLevel: string }[] {
     const lines = text
       .split(/\r?\n/)
       .map((l) => l.trim())
@@ -178,14 +189,22 @@ export function VoterList({
     // Detect if first row is a header
     const firstLine = lines[0].toLowerCase();
     const startIndex =
-      firstLine.includes("lrn") || firstLine.includes("section") ? 1 : 0;
+      firstLine.includes("lrn") ||
+      firstLine.includes("section") ||
+      firstLine.includes("grade")
+        ? 1
+        : 0;
 
-    const rows: { lrn: string; section: string }[] = [];
+    const rows: { lrn: string; section: string; gradeLevel: string }[] = [];
     for (let i = startIndex; i < lines.length; i++) {
       // Support comma and tab separators
-      const parts = lines[i].split(/[,\t]/).map((p) => p.trim().replace(/^"|"$/g, ""));
-      if (parts.length >= 2) {
-        rows.push({ lrn: parts[0], section: parts[1] });
+      const parts = lines[i]
+        .split(/[,\t]/)
+        .map((p) => p.trim().replace(/^"|"$/g, ""));
+      if (parts.length >= 3) {
+        rows.push({ lrn: parts[0], section: parts[1], gradeLevel: parts[2] });
+      } else if (parts.length >= 2) {
+        rows.push({ lrn: parts[0], section: parts[1], gradeLevel: "" });
       }
     }
     return rows;
@@ -277,6 +296,7 @@ export function VoterList({
               <TableRow>
                 <TableHead>LRN</TableHead>
                 <TableHead>Section</TableHead>
+                <TableHead>Grade Level</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Added</TableHead>
                 <TableHead className="w-12.5" />
@@ -287,10 +307,9 @@ export function VoterList({
                 <TableRow key={voter.id}>
                   <TableCell className="font-mono">{voter.lrn}</TableCell>
                   <TableCell>{voter.section.name}</TableCell>
+                  <TableCell>{voter.section.gradeLevel}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant={voter.hasVoted ? "default" : "secondary"}
-                    >
+                    <Badge variant={voter.hasVoted ? "default" : "secondary"}>
                       {voter.hasVoted ? "Voted" : "Not voted"}
                     </Badge>
                   </TableCell>
@@ -370,6 +389,22 @@ export function VoterList({
                   ))}
                 </datalist>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-voter-gradelevel">Grade Level</Label>
+                <select
+                  id="create-voter-gradelevel"
+                  name="gradeLevel"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
+                  required
+                >
+                  <option value="">Select grade level</option>
+                  {GRADE_LEVELS.map((gl) => (
+                    <option key={gl} value={gl}>
+                      {gl}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <DialogFooter>
               <Button type="submit" disabled={loading}>
@@ -420,6 +455,23 @@ export function VoterList({
                   ))}
                 </datalist>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-voter-gradelevel">Grade Level</Label>
+                <select
+                  id="edit-voter-gradelevel"
+                  name="gradeLevel"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
+                  defaultValue={selected?.section.gradeLevel ?? ""}
+                  required
+                >
+                  <option value="">Select grade level</option>
+                  {GRADE_LEVELS.map((gl) => (
+                    <option key={gl} value={gl}>
+                      {gl}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <DialogFooter>
               <Button type="submit" disabled={loading}>
@@ -461,9 +513,9 @@ export function VoterList({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete All Voters</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete all {voters.length} voter(s)?
-              This will remove all voter records and their vote history. This
-              action cannot be undone.
+              Are you sure you want to delete all {voters.length} voter(s)? This
+              will remove all voter records and their vote history. This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -490,8 +542,9 @@ export function VoterList({
           <DialogHeader>
             <DialogTitle>Import Voters from CSV</DialogTitle>
             <DialogDescription>
-              Upload a CSV file with two columns: <strong>LRN</strong> and{" "}
-              <strong>Section</strong>. A header row is optional.
+              Upload a CSV file with three columns: <strong>LRN</strong>,{" "}
+              <strong>Section</strong>, and <strong>Grade Level</strong>. A
+              header row is optional.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -517,6 +570,7 @@ export function VoterList({
                       <TableRow>
                         <TableHead>LRN</TableHead>
                         <TableHead>Section</TableHead>
+                        <TableHead>Grade Level</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -528,12 +582,15 @@ export function VoterList({
                           <TableCell className="text-sm">
                             {row.section}
                           </TableCell>
+                          <TableCell className="text-sm">
+                            {row.gradeLevel}
+                          </TableCell>
                         </TableRow>
                       ))}
                       {importPreview.length > 10 && (
                         <TableRow>
                           <TableCell
-                            colSpan={2}
+                            colSpan={3}
                             className="text-center text-sm text-muted-foreground"
                           >
                             …and {importPreview.length - 10} more row(s)
