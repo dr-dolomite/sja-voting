@@ -153,6 +153,7 @@ export function ElectionList({ elections }: { elections: Election[] }) {
                 <TableHead>Status</TableHead>
                 <TableHead>Positions</TableHead>
                 <TableHead>Created</TableHead>
+                <TableHead>Actions</TableHead>
                 <TableHead className="w-12.5" />
               </TableRow>
             </TableHeader>

@@ -19,7 +19,9 @@ export function VoterLoginForm() {
       <div className="grid gap-3">
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="username">Username</FieldLabel>
+            <FieldLabel htmlFor="lrn">
+              Learner Reference Number
+            </FieldLabel>
             <InputGroup>
               <InputGroupInput
                 id="lrn"

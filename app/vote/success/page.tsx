@@ -13,7 +13,7 @@ import {
 
 export default function VoteSuccessPage() {
   const router = useRouter();
-  const [countdown, setCountdown] = useState(19);
+  const [countdown, setCountdown] = useState(10);
 
   useEffect(() => {
     const timer = setInterval(() => {
