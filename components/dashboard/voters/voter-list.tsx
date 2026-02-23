@@ -46,6 +46,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -235,12 +241,17 @@ export function VoterList({
     <>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <Input
-          placeholder="Search LRN or section…"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-xs"
-        />
+        <InputGroup className="max-w-sm">
+          <InputGroupInput
+            id="inline-start-input"
+            placeholder="Search LRN or section…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <InputGroupAddon align="inline-start">
+            <SearchIcon className="text-muted-foreground" />
+          </InputGroupAddon>
+        </InputGroup>
         <select
           className="h-9 rounded-md border border-input bg-background px-3 text-sm"
           value={filterSection}

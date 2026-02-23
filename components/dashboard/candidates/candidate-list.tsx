@@ -40,6 +40,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -220,8 +226,7 @@ export function CandidateList({
 
         <div className="space-y-2">
           <Label htmlFor="cand-image">
-            Image URL{" "}
-            <span className="text-muted-foreground">(optional)</span>
+            Image URL <span className="text-muted-foreground">(optional)</span>
           </Label>
           <Input
             id="cand-image"
@@ -300,12 +305,16 @@ export function CandidateList({
     <>
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <Input
-          placeholder="Search name or position…"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-xs"
-        />
+        <InputGroup className="max-w-sm">
+          <InputGroupInput
+            placeholder="Search name or position…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <InputGroupAddon align="inline-start">
+            <SearchIcon className="text-muted-foreground" />
+          </InputGroupAddon>
+        </InputGroup>
         <select
           className="h-9 rounded-md border border-input bg-background px-3 text-sm"
           value={filterElection}
@@ -332,7 +341,7 @@ export function CandidateList({
         </select>
         <div className="ml-auto">
           <Button onClick={openCreate}>
-            <Plus className="mr-2 size-4" />
+            <Plus className="size-4" />
             Add Candidate
           </Button>
         </div>
@@ -390,9 +399,7 @@ export function CandidateList({
                         </div>
                       )}
                       <div>
-                        <div className="font-medium">
-                          {candidate.fullName}
-                        </div>
+                        <div className="font-medium">{candidate.fullName}</div>
                         {candidate.description && (
                           <div className="max-w-xs truncate text-xs text-muted-foreground">
                             {candidate.description}
@@ -404,10 +411,7 @@ export function CandidateList({
                   <TableCell>{candidate.position.name}</TableCell>
                   <TableCell>{candidate.position.election.name}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className="gap-1.5"
-                    >
+                    <Badge variant="outline" className="gap-1.5">
                       {candidate.partylist.color && (
                         <span
                           className="inline-block size-2 rounded-full"
@@ -429,7 +433,7 @@ export function CandidateList({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openEdit(candidate)}>
-                          <Pencil className="mr-2 size-4" />
+                          <Pencil className="size-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -439,7 +443,7 @@ export function CandidateList({
                             setDeleteOpen(true);
                           }}
                         >
-                          <Trash2 className="mr-2 size-4" />
+                          <Trash2 className="size-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -496,7 +500,7 @@ export function CandidateList({
                     positionId: selected.positionId,
                     partylistId: selected.partylistId,
                   }
-                : undefined
+                : undefined,
             )}
             <DialogFooter>
               <Button type="submit" disabled={loading}>

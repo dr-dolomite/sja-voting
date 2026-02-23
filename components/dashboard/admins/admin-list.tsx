@@ -139,7 +139,7 @@ export function AdminList({
     <>
       <div className="flex justify-end">
         <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 size-4" />
+          <Plus className="size-4" />
           Add Admin
         </Button>
       </div>
@@ -187,7 +187,7 @@ export function AdminList({
                             setEditOpen(true);
                           }}
                         >
-                          <Pencil className="mr-2 size-4" />
+                          <Pencil className="size-4" />
                           Edit Username
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -196,7 +196,7 @@ export function AdminList({
                             setPasswordOpen(true);
                           }}
                         >
-                          <KeyRound className="mr-2 size-4" />
+                          <KeyRound className="size-4" />
                           Change Password
                         </DropdownMenuItem>
                         {admin.id !== currentAdminId && (
@@ -209,7 +209,7 @@ export function AdminList({
                                 setDeleteOpen(true);
                               }}
                             >
-                              <Trash2 className="mr-2 size-4" />
+                              <Trash2 className="size-4" />
                               Delete
                             </DropdownMenuItem>
                           </>

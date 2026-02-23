@@ -174,8 +174,7 @@ export function BallotForm({ election }: { election: Election }) {
 
                 return (
                   <div key={candidate.id} className="relative w-88 p-2">
-                    <button
-                      type="button"
+                    <div
                       onClick={() =>
                         toggleCandidate(
                           position.id,
@@ -183,7 +182,7 @@ export function BallotForm({ election }: { election: Election }) {
                           position.maxVotes,
                         )
                       }
-                      className={`flex h-full w-full flex-col items-center rounded-lg border p-5 pb-6 text-center transition-colors ${
+                      className={`flex h-full w-full flex-col items-center rounded-lg border p-5 pb-6 text-center transition-colors hover:cursor-pointer ${
                         isSelected
                           ? "border-primary bg-primary/5 ring-2 ring-primary"
                           : "border-border hover:bg-muted/50"
@@ -220,7 +219,16 @@ export function BallotForm({ election }: { election: Election }) {
                       </span>
 
                       {/* Partylist badge */}
-                      <Badge variant="outline" className="mt-2 gap-1.5 text-sm">
+                      <Badge
+                        className="mt-2 gap-1.5 text-sm"
+                        style={{
+                          backgroundColor: candidate.partylist.color
+                            ? `color-mix(in oklch, ${candidate.partylist.color} 10%, transparent)`
+                            : undefined,
+                          color: candidate.partylist.color ?? undefined,
+                          borderColor: candidate.partylist.color ?? undefined,
+                        }}
+                      >
                         {candidate.partylist.color && (
                           <span
                             className="inline-block size-2 rounded-full"
@@ -254,7 +262,7 @@ export function BallotForm({ election }: { election: Election }) {
                         <Info className="size-4" />
                         Read more
                       </Button>
-                    </button>
+                    </div>
                   </div>
                 );
               })}
@@ -273,7 +281,9 @@ export function BallotForm({ election }: { election: Election }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Review Your Ballot</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            Review Your Ballot
+          </CardTitle>
           <CardDescription>
             Review your selections before submitting. {filledPositions}/
             {election.positions.length} positions filled.
@@ -341,10 +351,19 @@ export function BallotForm({ election }: { election: Election }) {
   // ── Main render ────────────────────────────────────────────
 
   return (
-    <div className="mx-auto px-24 max-w-screen space-y-6 pb-28 pt-16">
+    <div className="mx-auto px-24 max-w-screen space-y-6 p-12">
+      <div className="flex justify-start items-center">
+        <Image
+          src="/sja-logo.webp"
+          alt="SJA Logo"
+          width={100}
+          height={100}
+          className="size-28 object-contain"
+        />
+      </div>
       {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl font-bold">{election.name}</h1>
+      <div className="text-center -mt-16">
+        <h1 className="text-3xl font-bold">{election.name}</h1>
         <p className="mt-1 text-md text-muted-foreground">
           Step {page + 1} of {totalPages}
           {isReviewPage ? " — Review" : ` — ${election.positions[page].name}`}

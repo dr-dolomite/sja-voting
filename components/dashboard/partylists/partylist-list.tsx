@@ -114,7 +114,7 @@ export function PartylistList({ partylists }: { partylists: Partylist[] }) {
     <>
       <div className="flex justify-end">
         <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 size-4" />
+          <Plus className="size-4" />
           Create Partylist
         </Button>
       </div>
@@ -174,7 +174,7 @@ export function PartylistList({ partylists }: { partylists: Partylist[] }) {
                             setEditOpen(true);
                           }}
                         >
-                          <Pencil className="mr-2 size-4" />
+                          <Pencil className="size-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -184,7 +184,7 @@ export function PartylistList({ partylists }: { partylists: Partylist[] }) {
                             setDeleteOpen(true);
                           }}
                         >
-                          <Trash2 className="mr-2 size-4" />
+                          <Trash2 className="size-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>

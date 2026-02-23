@@ -153,7 +153,6 @@ export function ElectionList({ elections }: { elections: Election[] }) {
                 <TableHead>Status</TableHead>
                 <TableHead>Positions</TableHead>
                 <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
                 <TableHead className="w-12.5" />
               </TableRow>
             </TableHeader>
@@ -183,7 +182,7 @@ export function ElectionList({ elections }: { elections: Election[] }) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
                           <Link href={`/dashboard/elections/${election.id}`}>
-                            <Eye className="mr-2 size-4" />
+                            <Eye className="size-4" />
                             View Positions
                           </Link>
                         </DropdownMenuItem>
@@ -193,13 +192,13 @@ export function ElectionList({ elections }: { elections: Election[] }) {
                             setEditOpen(true);
                           }}
                         >
-                          <Pencil className="mr-2 size-4" />
+                          <Pencil className="size-4" />
                           Edit Name
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleToggle(election)}
                         >
-                          <Power className="mr-2 size-4" />
+                          <Power className="size-4" />
                           {election.isActive ? "Deactivate" : "Activate"}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -210,7 +209,7 @@ export function ElectionList({ elections }: { elections: Election[] }) {
                             setDeleteOpen(true);
                           }}
                         >
-                          <Trash2 className="mr-2 size-4" />
+                          <Trash2 className="size-4" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
