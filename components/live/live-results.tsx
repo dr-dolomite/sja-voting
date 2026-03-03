@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Crown, Vote } from "lucide-react";
 
 import { getElectionResults, getSectionTurnout } from "@/actions/results";
+import { Card } from "../ui/card";
 
 type CandidateResult = {
   id: string;
@@ -160,7 +161,7 @@ function PositionCarousel({ positions }: { positions: PositionResult[] }) {
       </div>
 
       {/* Candidates */}
-      <div className="mx-auto max-w-2xl space-y-3">
+      <Card className="p-8">
         {position.candidates.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">
             No candidates for this position.
@@ -176,7 +177,7 @@ function PositionCarousel({ positions }: { positions: PositionResult[] }) {
                 key={c.id}
                 className={`flex items-center gap-4 rounded-xl p-3 transition-all duration-500 ${
                   isLeader
-                    ? "bg-amber-500/10 ring-1 ring-amber-500/30"
+                    ? "bg-primary/10 ring-1 ring-primary/30"
                     : "bg-card/50"
                 }`}
               >
@@ -197,11 +198,6 @@ function PositionCarousel({ positions }: { positions: PositionResult[] }) {
                         .map((n) => n[0])
                         .join("")
                         .slice(0, 2)}
-                    </div>
-                  )}
-                  {isLeader && (
-                    <div className="absolute top-0.5 right-2 flex size-6 items-center justify-center rounded-full bg-amber-500 shadow sm:right-2.5">
-                      <Crown className="size-3.5 text-white" />
                     </div>
                   )}
                 </div>
@@ -228,7 +224,7 @@ function PositionCarousel({ positions }: { positions: PositionResult[] }) {
                       {c.votes}
                     </span>
                   </div>
-                  <div className="h-3 w-full overflow-hidden rounded-full bg-muted/30">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted/30">
                     <div
                       className="h-full rounded-full transition-all duration-700 ease-out"
                       style={{
@@ -244,7 +240,8 @@ function PositionCarousel({ positions }: { positions: PositionResult[] }) {
             );
           })
         )}
-      </div>
+      </Card>
+
 
       {/* Carousel dots */}
       {positions.length > 1 && (
@@ -359,17 +356,6 @@ export function LiveResults({
 
       {/* Content */}
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center gap-10 px-6 py-8 sm:py-12">
-        {/* Turnout Ring */}
-        {turnout && (
-          <div className="flex flex-col items-center gap-3">
-            <TurnoutRing percent={turnout.turnoutPercent} />
-            <p className="text-sm text-muted-foreground">
-              {turnout.totalVoted} of {turnout.totalVoters} voters have cast
-              their ballots
-            </p>
-          </div>
-        )}
-
         {/* Position Carousel */}
         {results && results.positions.length > 0 && (
           <PositionCarousel positions={results.positions} />
