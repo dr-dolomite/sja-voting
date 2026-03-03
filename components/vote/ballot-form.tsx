@@ -148,7 +148,9 @@ export function BallotForm({ election }: { election: Election }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-3xl font-bold">{position.name}</CardTitle>
+          <CardTitle className="text-3xl font-bold">
+            Please select a candidate for {position.name}
+          </CardTitle>
           <CardDescription>
             <span className="font-semibold text-black">
               Select{" "}
@@ -352,22 +354,50 @@ export function BallotForm({ election }: { election: Election }) {
 
   return (
     <div className="mx-auto px-24 max-w-screen space-y-6 p-12">
-      <div className="flex justify-start items-center">
-        <Image
-          src="/sja-logo.webp"
-          alt="SJA Logo"
-          width={100}
-          height={100}
-          className="size-28 object-contain"
-        />
-      </div>
       {/* Header */}
-      <div className="text-center -mt-16">
-        <h1 className="text-3xl font-bold">{election.name}</h1>
-        <p className="mt-1 text-md text-muted-foreground">
-          Step {page + 1} of {totalPages}
-          {isReviewPage ? " — Review" : ` — ${election.positions[page].name}`}
-        </p>
+      <div className="grid gap-4">
+        <div className="flex justify-start items-center gap-x-8">
+          <Image
+            src="/sja-logo.webp"
+            alt="SJA Logo"
+            width={100}
+            height={100}
+            className="size-32 object-contain"
+          />
+
+          <div className="grid gap-0.5">
+            <h1 className="text-3xl font-bold">{election.name}</h1>
+            {/* <p className="mt-1 text-md text-muted-foreground">
+            Step {page + 1} of {totalPages}
+            {isReviewPage ? " — Review" : ` — ${election.positions[page].name}`}
+          </p> */}
+            <p className="max-w-240">
+              St. Joseph&apos;s Academy of Malinao, Inc. Student Council
+              Election for SY 2026-2027.
+            </p>
+          </div>
+        </div>
+
+        {/* Instructions */}
+        <div className="rounded-lg bg-primary/5 p-4 text-sm text-black/90">
+          <h2 className="mb-2 text-lg font-bold">Instructions</h2>
+          <ol className="list-inside space-y-1 text-md font-medium">
+            <li>
+              For each position, select your preferred candidate(s) by clicking
+              on their card. You can select up to the maximum number of
+              candidates allowed for that position.
+            </li>
+            <li>
+              After making your selections for all positions, click
+              &quot;Review&quot; to see a summary of your choices.
+            </li>
+            <li>
+              If everything looks correct, click &quot;Submit Votes&quot; to
+              cast your ballot. Remember, once submitted, you cannot change your
+              votes.
+            </li>
+          </ol>
+        </div>
       </div>
 
       {/* Current page content */}
