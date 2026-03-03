@@ -161,7 +161,7 @@ function PositionCarousel({ positions }: { positions: PositionResult[] }) {
       </div>
 
       {/* Candidates */}
-      <Card className="p-8">
+      <Card className="p-6">
         {position.candidates.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">
             No candidates for this position.
@@ -241,7 +241,6 @@ function PositionCarousel({ positions }: { positions: PositionResult[] }) {
           })
         )}
       </Card>
-
 
       {/* Carousel dots */}
       {positions.length > 1 && (
