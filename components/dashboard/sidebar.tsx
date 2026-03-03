@@ -92,6 +92,10 @@ const resultsItems = [
     title: "Voter Turnout",
     href: "/dashboard/results/turnout",
   },
+  {
+    title: "Final Results",
+    href: "/dashboard/results/final",
+  },
 ];
 
 export function AppSidebar() {

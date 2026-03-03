@@ -57,6 +57,7 @@ export async function getElectionResults(electionId: string) {
       name: position.name,
       order: position.order,
       maxVotes: position.maxVotes,
+      gradeLevel: position.gradeLevel ?? null,
       totalVotes: totalVotesForPosition,
       candidates: sortedCandidates.map((c, index) => ({
         id: c.id,

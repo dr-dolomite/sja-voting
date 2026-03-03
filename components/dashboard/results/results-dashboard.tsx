@@ -90,6 +90,7 @@ type PositionResult = {
   name: string;
   order: number;
   maxVotes: number;
+  gradeLevel: string | null;
   totalVotes: number;
   candidates: CandidateResult[];
 };
