@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@/lib/generated/prisma";
 import { db } from "@/lib/db";
 
 /** Get the currently active election (if any). */
@@ -120,4 +121,50 @@ export async function getSectionTurnout() {
       turnoutPercent: overallTurnout,
     },
   };
+}
+
+/** Get votes and voter-login counts grouped by date for the activity chart. */
+export async function getActivityOverTime() {
+  // Votes per day from the Vote table
+  const voteRows = await db.$queryRaw<{ date: string; count: bigint }[]>(
+    Prisma.sql`
+      SELECT DATE("createdAt") AS date, COUNT(*)::bigint AS count
+      FROM "Vote"
+      GROUP BY DATE("createdAt")
+      ORDER BY date
+    `,
+  );
+
+  // Successful voter logins per day from AuditLog
+  const loginRows = await db.$queryRaw<{ date: string; count: bigint }[]>(
+    Prisma.sql`
+      SELECT DATE("timestamp") AS date, COUNT(*)::bigint AS count
+      FROM "AuditLog"
+      WHERE "action" = 'VOTER_LOGIN_SUCCESS'
+      GROUP BY DATE("timestamp")
+      ORDER BY date
+    `,
+  );
+
+  // Merge both into a single date-keyed map
+  const map = new Map<string, { login: number; vote: number }>();
+
+  for (const row of loginRows) {
+    const key = new Date(row.date).toISOString().slice(0, 10);
+    const entry = map.get(key) ?? { login: 0, vote: 0 };
+    entry.login = Number(row.count);
+    map.set(key, entry);
+  }
+
+  for (const row of voteRows) {
+    const key = new Date(row.date).toISOString().slice(0, 10);
+    const entry = map.get(key) ?? { login: 0, vote: 0 };
+    entry.vote = Number(row.count);
+    map.set(key, entry);
+  }
+
+  // Return sorted by date
+  return [...map.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, counts]) => ({ date, ...counts }));
 }
