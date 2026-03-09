@@ -353,7 +353,7 @@ export function BallotForm({ election }: { election: Election }) {
   // ── Main render ────────────────────────────────────────────
 
   return (
-    <div className="mx-auto px-24 max-w-screen space-y-6 p-12">
+    <div className="mx-auto px-24 max-w-screen space-y-6 p-4">
       {/* Header */}
       <div className="grid gap-4">
         <div className="flex justify-start items-center gap-x-8">
@@ -408,7 +408,7 @@ export function BallotForm({ election }: { election: Election }) {
       {/* Bottom navigation bar with progress */}
       <div className="fixed inset-x-0 bottom-0 border-t bg-background">
         <Progress value={progressPercent} className="h-1.5 rounded-none" />
-        <div className="mx-auto flex max-w-4xl items-center justify-between p-4">
+        <div className="mx-auto flex max-w-4xl items-center justify-between p-3">
           <Button
             variant="outline"
             onClick={() => setPage((p) => Math.max(0, p - 1))}

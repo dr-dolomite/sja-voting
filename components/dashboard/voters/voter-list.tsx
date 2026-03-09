@@ -329,7 +329,11 @@ export function VoterList({
                     <div className="flex flex-wrap gap-1">
                       {voter.elections.length > 0 ? (
                         voter.elections.map((e) => (
-                          <Badge key={e.id} variant="outline" className="text-xs">
+                          <Badge
+                            key={e.id}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {e.name}
                           </Badge>
                         ))
