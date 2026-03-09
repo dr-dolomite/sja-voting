@@ -50,10 +50,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   createCandidate,
   updateCandidate,
   deleteCandidate,
+  deleteCandidates,
 } from "@/actions/candidates";
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -103,6 +105,8 @@ export function CandidateList({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<Candidate | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   // Filters
   const [filterElection, setFilterElection] = useState("");
@@ -187,6 +191,56 @@ export function CandidateList({
     setSelected(null);
     router.refresh();
   }
+
+  async function handleBulkDelete() {
+    setLoading(true);
+    const result = await deleteCandidates([...selectedIds]);
+    setLoading(false);
+
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success(`${selectedIds.size} candidate(s) deleted.`);
+    setBulkDeleteOpen(false);
+    setSelectedIds(new Set());
+    router.refresh();
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    const filteredIds = filteredCandidates.map((c) => c.id);
+    const allSelected = filteredIds.every((id) => selectedIds.has(id));
+    if (allSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filteredIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        filteredIds.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  }
+
+  const allFilteredSelected =
+    filteredCandidates.length > 0 &&
+    filteredCandidates.every((c) => selectedIds.has(c.id));
+  const someFilteredSelected =
+    !allFilteredSelected &&
+    filteredCandidates.some((c) => selectedIds.has(c.id));
 
   // ── Shared form fields ──────────────────────────────────────
 
@@ -339,7 +393,16 @@ export function CandidateList({
             </option>
           ))}
         </select>
-        <div className="ml-auto">
+        <div className="ml-auto flex gap-2">
+          {selectedIds.size > 0 && (
+            <Button
+              variant="destructive"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
+              <Trash2 className="size-4" />
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
           <Button onClick={openCreate}>
             <Plus className="size-4" />
             Add Candidate
@@ -368,6 +431,19 @@ export function CandidateList({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={
+                      allFilteredSelected
+                        ? true
+                        : someFilteredSelected
+                          ? "indeterminate"
+                          : false
+                    }
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Position</TableHead>
                 <TableHead>Election</TableHead>
@@ -378,6 +454,13 @@ export function CandidateList({
             <TableBody>
               {filteredCandidates.map((candidate) => (
                 <TableRow key={candidate.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(candidate.id)}
+                      onCheckedChange={() => toggleSelect(candidate.id)}
+                      aria-label={`Select ${candidate.fullName}`}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       {candidate.imageUrl ? (
@@ -531,6 +614,26 @@ export function CandidateList({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={loading}>
               {loading ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} Candidate(s)</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.size} selected
+              candidate(s)? This action cannot be undone and will also remove
+              their associated votes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={loading}>
+              {loading ? "Deleting…" : `Delete ${selectedIds.size} Candidate(s)`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

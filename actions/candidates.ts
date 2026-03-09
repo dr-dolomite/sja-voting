@@ -102,6 +102,38 @@ export async function updateCandidate(formData: FormData) {
   return { success: true };
 }
 
+export async function deleteCandidates(ids: string[]) {
+  if (!ids.length) return { error: "No candidates selected." };
+
+  const candidates = await db.candidate.findMany({
+    where: { id: { in: ids } },
+    include: { position: true },
+  });
+
+  try {
+    await db.candidate.deleteMany({ where: { id: { in: ids } } });
+
+    const session = await getSession();
+    await logAdminAction({
+      action: "CANDIDATES_BULK_DELETED",
+      category: "CANDIDATE",
+      severity: "WARNING",
+      actorId: session?.adminId,
+      actorName: session?.username,
+      detail: `Bulk deleted ${candidates.length} candidate(s): ${candidates.map((c) => c.fullName).join(", ")}`,
+      metadata: {
+        ids,
+        names: candidates.map((c) => c.fullName),
+      },
+    });
+
+    revalidatePath("/dashboard/candidates");
+    return { success: true };
+  } catch {
+    return { error: "Failed to delete candidates." };
+  }
+}
+
 export async function deleteCandidate(id: string) {
   const candidate = await db.candidate.findUnique({
     where: { id },

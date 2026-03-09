@@ -70,6 +70,7 @@ type Voter = {
   votedAt: Date | null;
   createdAt: Date;
   section: { id: string; name: string; gradeLevel: string };
+  elections: { id: string; name: string }[];
 };
 
 const GRADE_LEVELS = [
@@ -265,16 +266,20 @@ export function VoterList({
           ))}
         </select>
         <div className="ml-auto flex gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)}>
-            <Upload className="size-4" />
-            Import CSV
-          </Button>
           {voters.length > 0 && (
-            <Button variant="outline" onClick={() => setDeleteAllOpen(true)}>
+            <Button
+              variant="destructive"
+              onClick={() => setDeleteAllOpen(true)}
+            >
               <Trash className="size-4" />
               Delete All
             </Button>
           )}
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="size-4" />
+            Import CSV
+          </Button>
+
           <Button onClick={() => setCreateOpen(true)}>
             <Plus className="size-4" />
             Add Voter
@@ -308,6 +313,7 @@ export function VoterList({
                 <TableHead>LRN</TableHead>
                 <TableHead>Section</TableHead>
                 <TableHead>Grade Level</TableHead>
+                <TableHead>Elections</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Added</TableHead>
                 <TableHead className="w-12.5" />
@@ -319,6 +325,21 @@ export function VoterList({
                   <TableCell className="font-mono">{voter.lrn}</TableCell>
                   <TableCell>{voter.section.name}</TableCell>
                   <TableCell>{voter.section.gradeLevel}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {voter.elections.length > 0 ? (
+                        voter.elections.map((e) => (
+                          <Badge key={e.id} variant="outline" className="text-xs">
+                            {e.name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          None
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={voter.hasVoted ? "default" : "secondary"}>
                       {voter.hasVoted ? "Voted" : "Not voted"}

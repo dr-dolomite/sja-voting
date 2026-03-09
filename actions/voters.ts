@@ -15,7 +15,10 @@ export async function getSections() {
 
 export async function getVoters() {
   return db.voter.findMany({
-    include: { section: true },
+    include: {
+      section: true,
+      elections: { select: { id: true, name: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 }

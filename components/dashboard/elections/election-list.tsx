@@ -3,7 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Plus, Pencil, Trash2, Power, Eye } from "lucide-react";
+import {
+  MoreHorizontal,
+  Plus,
+  Pencil,
+  Trash2,
+  Power,
+  Eye,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -49,6 +57,7 @@ import {
   updateElection,
   toggleElection,
   deleteElection,
+  resetElectionVotes,
 } from "@/actions/elections";
 
 type Election = {
@@ -66,6 +75,8 @@ export function ElectionList({ elections }: { elections: Election[] }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<Election | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetPassword, setResetPassword] = useState("");
 
   async function handleCreate(formData: FormData) {
     setLoading(true);
@@ -124,6 +135,24 @@ export function ElectionList({ elections }: { elections: Election[] }) {
 
     toast.success("Election deleted.");
     setDeleteOpen(false);
+    setSelected(null);
+    router.refresh();
+  }
+
+  async function handleReset() {
+    if (!selected) return;
+    setLoading(true);
+    const result = await resetElectionVotes(selected.id, resetPassword);
+    setLoading(false);
+
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success("All votes for this election have been reset.");
+    setResetOpen(false);
+    setResetPassword("");
     setSelected(null);
     router.refresh();
   }
@@ -201,6 +230,17 @@ export function ElectionList({ elections }: { elections: Election[] }) {
                           <Power className="size-4" />
                           {election.isActive ? "Deactivate" : "Activate"}
                         </DropdownMenuItem>
+                        {election.isActive && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelected(election);
+                              setResetOpen(true);
+                            }}
+                          >
+                            <RotateCcw className="size-4" />
+                            Reset Votes
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           variant="destructive"
@@ -309,6 +349,48 @@ export function ElectionList({ elections }: { elections: Election[] }) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={loading}>
               {loading ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Votes Confirmation */}
+      <AlertDialog
+        open={resetOpen}
+        onOpenChange={(open) => {
+          setResetOpen(open);
+          if (!open) {
+            setResetPassword("");
+            setSelected(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Votes</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete all votes for &quot;{selected?.name}&quot; and
+              reset all affected voters&apos; voting status. This action cannot
+              be undone. Enter your admin password to confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="reset-password">Admin Password</Label>
+            <Input
+              id="reset-password"
+              type="password"
+              placeholder="Enter your password"
+              value={resetPassword}
+              onChange={(e) => setResetPassword(e.target.value)}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReset}
+              disabled={loading || !resetPassword}
+            >
+              {loading ? "Resetting…" : "Reset Votes"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

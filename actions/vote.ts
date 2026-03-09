@@ -33,6 +33,22 @@ export async function getActiveBallot(voterId: string) {
 
   if (!election) return null;
 
+  // Check voter assignment: if election has assigned voters, verify this voter is assigned
+  const assignedCount = await db.election.findUnique({
+    where: { id: election.id },
+    select: { _count: { select: { voters: true } } },
+  });
+
+  if (assignedCount && assignedCount._count.voters > 0) {
+    const isAssigned = await db.election.findFirst({
+      where: {
+        id: election.id,
+        voters: { some: { id: voterId } },
+      },
+    });
+    if (!isAssigned) return null;
+  }
+
   // Filter positions: show universal positions (gradeLevel is null) and
   // positions matching the voter's grade level
   const filteredPositions = election.positions.filter(
@@ -94,6 +110,32 @@ export async function submitVotes(candidateIds: string[]) {
       detail: `Vote rejected for LRN "${voter.lrn}" — no active election`,
     });
     return { error: "No active election." };
+  }
+
+  // Check voter assignment: if election has assigned voters, verify this voter is assigned
+  const assignedCount = await db.election.findUnique({
+    where: { id: election.id },
+    select: { _count: { select: { voters: true } } },
+  });
+
+  if (assignedCount && assignedCount._count.voters > 0) {
+    const isAssigned = await db.election.findFirst({
+      where: {
+        id: election.id,
+        voters: { some: { id: voter.id } },
+      },
+    });
+    if (!isAssigned) {
+      await logVoterAction({
+        action: "VOTE_REJECTED_NOT_ASSIGNED",
+        category: "VOTE",
+        severity: "ERROR",
+        actorId: voter.id,
+        actorName: voter.lrn,
+        detail: `Vote rejected for LRN "${voter.lrn}" — not assigned to election "${election.name}"`,
+      });
+      return { error: "You are not eligible for this election." };
+    }
   }
 
   // Validate candidate IDs belong to this election

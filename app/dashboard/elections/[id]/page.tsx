@@ -2,10 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-import { getElection } from "@/actions/elections";
+import { getElection, getElectionAssignedSections } from "@/actions/elections";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PositionList } from "@/components/dashboard/elections/position-list";
+import { ElectionVoters } from "@/components/dashboard/elections/election-voters";
 
 export default async function ElectionDetailPage({
   params,
@@ -13,7 +14,10 @@ export default async function ElectionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const election = await getElection(id);
+  const [election, sections] = await Promise.all([
+    getElection(id),
+    getElectionAssignedSections(id),
+  ]);
 
   if (!election) {
     notFound();
@@ -43,6 +47,8 @@ export default async function ElectionDetailPage({
       </div>
 
       <PositionList positions={election.positions} electionId={election.id} />
+
+      <ElectionVoters electionId={election.id} sections={sections} />
     </div>
   );
 }

@@ -301,20 +301,25 @@ export function LiveResults({
   const [results, setResults] = useState<ElectionResult | null>(null);
   const [turnout, setTurnout] = useState<TurnoutOverall | null>(null);
 
+  const activeElectionId = activeElection?.id;
+
   const fetchData = useCallback(async () => {
-    if (!activeElection) return;
+    if (!activeElectionId) return;
     const [electionResults, turnoutData] = await Promise.all([
-      getElectionResults(activeElection.id),
+      getElectionResults(activeElectionId),
       getSectionTurnout(),
     ]);
     setResults(electionResults);
     setTurnout(turnoutData?.overall ?? null);
-  }, [activeElection]);
+  }, [activeElectionId]);
 
   useEffect(() => {
-    fetchData();
+    const timeout = setTimeout(fetchData, 0);
     const interval = setInterval(fetchData, 8000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, [fetchData]);
 
   if (!activeElection) {
