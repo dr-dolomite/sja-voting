@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { CheckCircle2, ChevronLeft, ChevronRight, Info } from "lucide-react";
@@ -70,6 +70,17 @@ export function BallotForm({ election }: { election: Election }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [descCandidate, setDescCandidate] = useState<Candidate | null>(null);
+
+  useEffect(() => {
+    if (isReviewPage) return;
+    const position = election.positions[page];
+    if (position && position.candidates.length > 3) {
+      const id = setTimeout(() => {
+        toast.info("Scroll down to see more candidates.", { duration: 3000 });
+      }, 500);
+      return () => clearTimeout(id);
+    }
+  }, [page, isReviewPage, election.positions]);
 
   function toggleCandidate(
     positionId: string,
@@ -353,7 +364,7 @@ export function BallotForm({ election }: { election: Election }) {
   // ── Main render ────────────────────────────────────────────
 
   return (
-    <div className="mx-auto px-24 max-w-screen space-y-6 p-4">
+    <div className="mx-auto px-24 max-w-screen space-y-6 p-8">
       {/* Header */}
       <div className="grid gap-4">
         <div className="flex justify-start items-center gap-x-8">
@@ -408,7 +419,7 @@ export function BallotForm({ election }: { election: Election }) {
       {/* Bottom navigation bar with progress */}
       <div className="fixed inset-x-0 bottom-0 border-t bg-background">
         <Progress value={progressPercent} className="h-1.5 rounded-none" />
-        <div className="mx-auto flex max-w-4xl items-center justify-between p-3">
+        <div className="mx-auto flex max-w-4xl items-center justify-between p-2">
           <Button
             variant="outline"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
