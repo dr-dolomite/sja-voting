@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import {
   createPosition,
@@ -52,13 +53,12 @@ type Position = {
   name: string;
   order: number;
   maxVotes: number;
-  gradeLevel: string | null;
+  gradeLevels: string[];
   electionId: string;
   _count: { candidates: number };
 };
 
 const GRADE_LEVELS = [
-  "All Grades",
   "Grade 7",
   "Grade 8",
   "Grade 9",
@@ -80,10 +80,19 @@ export function PositionList({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<Position | null>(null);
   const [loading, setLoading] = useState(false);
+  const [createGradeLevels, setCreateGradeLevels] = useState<Set<string>>(
+    new Set(),
+  );
+  const [editGradeLevels, setEditGradeLevels] = useState<Set<string>>(
+    new Set(),
+  );
 
   async function handleCreate(formData: FormData) {
     setLoading(true);
     formData.set("electionId", electionId);
+    for (const gl of createGradeLevels) {
+      formData.append("gradeLevel", gl);
+    }
     const result = await createPosition(formData);
     setLoading(false);
 
@@ -94,12 +103,16 @@ export function PositionList({
 
     toast.success("Position added.");
     setCreateOpen(false);
+    setCreateGradeLevels(new Set());
     router.refresh();
   }
 
   async function handleUpdate(formData: FormData) {
     setLoading(true);
     formData.set("electionId", electionId);
+    for (const gl of editGradeLevels) {
+      formData.append("gradeLevel", gl);
+    }
     const result = await updatePosition(formData);
     setLoading(false);
 
@@ -111,6 +124,7 @@ export function PositionList({
     toast.success("Position updated.");
     setEditOpen(false);
     setSelected(null);
+    setEditGradeLevels(new Set());
     router.refresh();
   }
 
@@ -169,7 +183,11 @@ export function PositionList({
                 <TableRow key={position.id}>
                   <TableCell>{position.order}</TableCell>
                   <TableCell className="font-medium">{position.name}</TableCell>
-                  <TableCell>{position.gradeLevel ?? "All Grades"}</TableCell>
+                  <TableCell>
+                    {position.gradeLevels.length > 0
+                      ? position.gradeLevels.join(", ")
+                      : "All Grades"}
+                  </TableCell>
                   <TableCell>{position.maxVotes}</TableCell>
                   <TableCell>{position._count.candidates}</TableCell>
                   <TableCell>
@@ -184,6 +202,7 @@ export function PositionList({
                         <DropdownMenuItem
                           onClick={() => {
                             setSelected(position);
+                            setEditGradeLevels(new Set(position.gradeLevels));
                             setEditOpen(true);
                           }}
                         >
@@ -232,19 +251,32 @@ export function PositionList({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="create-pos-gradelevel">Grade Level</Label>
-                <select
-                  id="create-pos-gradelevel"
-                  name="gradeLevel"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
-                  defaultValue="All Grades"
-                >
+                <Label>Grade Levels</Label>
+                <p className="text-xs text-muted-foreground">
+                  Select which grades can vote for this position. Leave all
+                  unchecked for all grades.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
                   {GRADE_LEVELS.map((gl) => (
-                    <option key={gl} value={gl}>
+                    <label
+                      key={gl}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <Checkbox
+                        checked={createGradeLevels.has(gl)}
+                        onCheckedChange={(checked) => {
+                          setCreateGradeLevels((prev) => {
+                            const next = new Set(prev);
+                            if (checked) next.add(gl);
+                            else next.delete(gl);
+                            return next;
+                          });
+                        }}
+                      />
                       {gl}
-                    </option>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -306,19 +338,32 @@ export function PositionList({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-pos-gradelevel">Grade Level</Label>
-                <select
-                  id="edit-pos-gradelevel"
-                  name="gradeLevel"
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs"
-                  defaultValue={selected?.gradeLevel ?? "All Grades"}
-                >
+                <Label>Grade Levels</Label>
+                <p className="text-xs text-muted-foreground">
+                  Select which grades can vote for this position. Leave all
+                  unchecked for all grades.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
                   {GRADE_LEVELS.map((gl) => (
-                    <option key={gl} value={gl}>
+                    <label
+                      key={gl}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <Checkbox
+                        checked={editGradeLevels.has(gl)}
+                        onCheckedChange={(checked) => {
+                          setEditGradeLevels((prev) => {
+                            const next = new Set(prev);
+                            if (checked) next.add(gl);
+                            else next.delete(gl);
+                            return next;
+                          });
+                        }}
+                      />
                       {gl}
-                    </option>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

@@ -34,7 +34,7 @@ type PositionResult = {
   name: string;
   order: number;
   maxVotes: number;
-  gradeLevel: string | null;
+  gradeLevels: string[];
   totalVotes: number;
   candidates: CandidateResult[];
 };
@@ -150,7 +150,7 @@ export function FinalResults({ elections }: { elections: Election[] }) {
         <div className="space-y-6">
           {[...groups.entries()].map(([positionName, positions]) => {
             const isGrouped =
-              positions.length > 1 || positions.some((p) => p.gradeLevel);
+              positions.length > 1 || positions.some((p) => p.gradeLevels.length > 0);
             return (
               <div key={positionName}>
                 {/* Position heading */}
@@ -185,7 +185,13 @@ export function FinalResults({ elections }: { elections: Election[] }) {
                       >
                         <CardContent className="p-6">
                           {/* Grade level badge (for dynamic positions) */}
-                          {pos.gradeLevel && <Badge className="mb-3">{pos.gradeLevel}</Badge>}
+                          {pos.gradeLevels.length > 0 && (
+                            <div className="mb-3 flex flex-wrap gap-1">
+                              {pos.gradeLevels.map((gl) => (
+                                <Badge key={gl}>{gl}</Badge>
+                              ))}
+                            </div>
+                          )}
 
                           {!hasWinner ? (
                             <p className="py-2 text-sm italic text-muted-foreground">

@@ -20,11 +20,10 @@ export async function createPosition(formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   const order = parseInt(formData.get("order") as string, 10);
   const maxVotes = parseInt(formData.get("maxVotes") as string, 10) || 1;
-  const gradeLevelRaw = (formData.get("gradeLevel") as string)?.trim();
-  const gradeLevel =
-    gradeLevelRaw && gradeLevelRaw.toLowerCase() !== "all grades"
-      ? gradeLevelRaw
-      : null;
+  const gradeLevelsRaw = formData.getAll("gradeLevel") as string[];
+  const gradeLevels = gradeLevelsRaw.filter(
+    (g) => g && g.toLowerCase() !== "all grades",
+  );
 
   if (!name) {
     return { error: "Position name is required." };
@@ -35,7 +34,7 @@ export async function createPosition(formData: FormData) {
   }
 
   const position = await db.position.create({
-    data: { name, order, maxVotes, gradeLevel, electionId },
+    data: { name, order, maxVotes, gradeLevels, electionId },
   });
 
   const session = await getSession();
@@ -62,11 +61,10 @@ export async function updatePosition(formData: FormData) {
   const name = (formData.get("name") as string)?.trim();
   const order = parseInt(formData.get("order") as string, 10);
   const maxVotes = parseInt(formData.get("maxVotes") as string, 10) || 1;
-  const gradeLevelRaw = (formData.get("gradeLevel") as string)?.trim();
-  const gradeLevel =
-    gradeLevelRaw && gradeLevelRaw.toLowerCase() !== "all grades"
-      ? gradeLevelRaw
-      : null;
+  const gradeLevelsRaw = formData.getAll("gradeLevel") as string[];
+  const gradeLevels = gradeLevelsRaw.filter(
+    (g) => g && g.toLowerCase() !== "all grades",
+  );
 
   if (!name) {
     return { error: "Position name is required." };
@@ -79,7 +77,7 @@ export async function updatePosition(formData: FormData) {
   const existing = await db.position.findUnique({ where: { id } });
   await db.position.update({
     where: { id },
-    data: { name, order, maxVotes, gradeLevel },
+    data: { name, order, maxVotes, gradeLevels },
   });
 
   const session = await getSession();

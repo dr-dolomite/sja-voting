@@ -53,7 +53,7 @@ model Position {
   name       String
   order      Int
   maxVotes   Int         @default(1)
-  gradeLevel String?
+  gradeLevels String[]   @default([])
   electionId String
   election   Election    @relation(fields: [electionId], references: [id], onDelete: Cascade)
   candidates Candidate[]

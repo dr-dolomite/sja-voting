@@ -49,10 +49,12 @@ export async function getActiveBallot(voterId: string) {
     if (!isAssigned) return null;
   }
 
-  // Filter positions: show universal positions (gradeLevel is null) and
-  // positions matching the voter's grade level
+  // Filter positions: show universal positions (empty gradeLevels) and
+  // positions whose gradeLevels include the voter's grade level
   const filteredPositions = election.positions.filter(
-    (p) => p.gradeLevel === null || p.gradeLevel === voterGradeLevel,
+    (p) =>
+      p.gradeLevels.length === 0 ||
+      (voterGradeLevel && p.gradeLevels.includes(voterGradeLevel)),
   );
 
   return { ...election, positions: filteredPositions };
