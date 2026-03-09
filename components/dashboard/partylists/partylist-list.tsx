@@ -61,6 +61,8 @@ export function PartylistList({ partylists }: { partylists: Partylist[] }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<Partylist | null>(null);
   const [loading, setLoading] = useState(false);
+  const [createColor, setCreateColor] = useState("#3b82f6");
+  const [editColor, setEditColor] = useState("#3b82f6");
 
   async function handleCreate(formData: FormData) {
     setLoading(true);
@@ -74,6 +76,7 @@ export function PartylistList({ partylists }: { partylists: Partylist[] }) {
 
     toast.success("Partylist created.");
     setCreateOpen(false);
+    setCreateColor("#3b82f6");
     router.refresh();
   }
 
@@ -171,6 +174,7 @@ export function PartylistList({ partylists }: { partylists: Partylist[] }) {
                         <DropdownMenuItem
                           onClick={() => {
                             setSelected(partylist);
+                            setEditColor(partylist.color ?? "#3b82f6");
                             setEditOpen(true);
                           }}
                         >
@@ -222,12 +226,22 @@ export function PartylistList({ partylists }: { partylists: Partylist[] }) {
                   Color{" "}
                   <span className="text-muted-foreground">(optional)</span>
                 </Label>
-                <Input
-                  id="create-pl-color"
-                  name="color"
-                  type="color"
-                  defaultValue="#3b82f6"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={createColor}
+                    onChange={(e) => setCreateColor(e.target.value)}
+                    className="size-9 shrink-0 cursor-pointer rounded-md border border-input p-0.5"
+                  />
+                  <Input
+                    id="create-pl-color"
+                    name="color"
+                    value={createColor}
+                    onChange={(e) => setCreateColor(e.target.value)}
+                    placeholder="#3b82f6"
+                    maxLength={7}
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -271,12 +285,22 @@ export function PartylistList({ partylists }: { partylists: Partylist[] }) {
                   Color{" "}
                   <span className="text-muted-foreground">(optional)</span>
                 </Label>
-                <Input
-                  id="edit-pl-color"
-                  name="color"
-                  type="color"
-                  defaultValue={selected?.color ?? "#3b82f6"}
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={editColor}
+                    onChange={(e) => setEditColor(e.target.value)}
+                    className="size-9 shrink-0 cursor-pointer rounded-md border border-input p-0.5"
+                  />
+                  <Input
+                    id="edit-pl-color"
+                    name="color"
+                    value={editColor}
+                    onChange={(e) => setEditColor(e.target.value)}
+                    placeholder="#3b82f6"
+                    maxLength={7}
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>

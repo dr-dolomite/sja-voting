@@ -390,25 +390,28 @@ export function BallotForm({ election }: { election: Election }) {
         </div>
 
         {/* Instructions */}
-        <div className="rounded-lg bg-primary/5 p-4 text-sm text-black/90">
-          <h2 className="mb-2 text-lg font-bold">Instructions</h2>
-          <ol className="list-inside space-y-1 text-md font-medium">
-            <li>
-              For each position, select your preferred candidate(s) by clicking
-              on their card. You can select up to the maximum number of
-              candidates allowed for that position.
-            </li>
-            <li>
-              After making your selections for all positions, click
-              &quot;Review&quot; to see a summary of your choices.
-            </li>
-            <li>
-              If everything looks correct, click &quot;Submit Votes&quot; to
-              cast your ballot. Remember, once submitted, you cannot change your
-              votes.
-            </li>
-          </ol>
-        </div>
+        {/* Only show at the beginning of the ballot */}
+        {page === 0 && (
+          <div className="rounded-lg bg-primary/5 p-4 text-sm text-black/90">
+            <h2 className="mb-2 text-lg font-bold">Instructions</h2>
+            <ol className="list-inside space-y-1 text-md font-medium">
+              <li>
+                For each position, select your preferred candidate(s) by
+                clicking on their card. You can select up to the maximum number
+                of candidates allowed for that position.
+              </li>
+              <li>
+                After making your selections for all positions, click
+                &quot;Review&quot; to see a summary of your choices.
+              </li>
+              <li>
+                If everything looks correct, click &quot;Submit Votes&quot; to
+                cast your ballot. Remember, once submitted, you cannot change
+                your votes.
+              </li>
+            </ol>
+          </div>
+        )}
       </div>
 
       {/* Current page content */}
