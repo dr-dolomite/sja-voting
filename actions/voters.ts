@@ -119,8 +119,14 @@ export async function updateVoter(formData: FormData) {
 export async function deleteVoter(id: string) {
   const voter = await db.voter.findUnique({
     where: { id },
-    include: { section: true },
+    include: { section: true, elections: { select: { id: true, name: true } } },
   });
+
+  if (voter && voter.elections.length > 0) {
+    const names = voter.elections.map((e) => e.name).join(", ");
+    return { error: `Cannot delete — voter is assigned to election(s): ${names}.` };
+  }
+
   try {
     await db.voter.delete({ where: { id } });
 
@@ -137,6 +143,7 @@ export async function deleteVoter(id: string) {
       detail: `Deleted voter LRN "${voter?.lrn}" (${voter?.section.name})`,
     });
 
+    await cleanupEmptySections();
     revalidatePath("/dashboard/voters");
     return { success: true };
   } catch {
@@ -144,9 +151,93 @@ export async function deleteVoter(id: string) {
   }
 }
 
+export async function deleteVoters(ids: string[]) {
+  if (ids.length === 0) return { error: "No voters selected." };
+
+  const voters = await db.voter.findMany({
+    where: { id: { in: ids } },
+    include: { elections: { select: { id: true, name: true } } },
+  });
+
+  const assigned = voters.filter((v) => v.elections.length > 0);
+  if (assigned.length > 0) {
+    return {
+      error: `${assigned.length} voter(s) are assigned to elections and cannot be deleted. Unassign them first.`,
+    };
+  }
+
+  await db.voter.deleteMany({ where: { id: { in: ids } } });
+
+  const session = await getSession();
+  await logAdminAction({
+    action: "VOTERS_BULK_DELETED",
+    category: "VOTER_MGMT",
+    severity: "WARNING",
+    actorId: session?.adminId,
+    actorName: session?.username,
+    detail: `Bulk deleted ${ids.length} voter(s)`,
+    metadata: { deletedCount: ids.length },
+  });
+
+  await cleanupEmptySections();
+  revalidatePath("/dashboard/voters");
+  return { success: true };
+}
+
+export async function resetVoterVote(voterId: string) {
+  const voter = await db.voter.findUnique({
+    where: { id: voterId },
+    include: { section: true },
+  });
+
+  if (!voter) return { error: "Voter not found." };
+  if (!voter.hasVoted) return { error: "Voter has not voted yet." };
+
+  const deletedVotes = await db.vote.count({ where: { voterId } });
+
+  await db.$transaction([
+    db.vote.deleteMany({ where: { voterId } }),
+    db.voter.update({
+      where: { id: voterId },
+      data: { hasVoted: false, votedAt: null },
+    }),
+  ]);
+
+  const session = await getSession();
+  await logAdminAction({
+    action: "VOTER_VOTE_RESET",
+    category: "VOTE",
+    severity: "WARNING",
+    actorId: session?.adminId,
+    actorName: session?.username,
+    targetType: "Voter",
+    targetId: voterId,
+    targetName: voter.lrn,
+    detail: `Reset vote for LRN "${voter.lrn}" (${voter.section.name}) — ${deletedVotes} vote(s) removed`,
+    metadata: { deletedVotes },
+  });
+
+  revalidatePath("/dashboard/voters");
+  revalidatePath("/dashboard/results");
+  return { success: true };
+}
+
 export async function deleteAllVoters() {
-  const count = await db.voter.count();
-  await db.voter.deleteMany();
+  // Skip voters assigned to elections
+  const assignedCount = await db.voter.count({
+    where: { elections: { some: {} } },
+  });
+  const deletableCount = await db.voter.count({
+    where: { elections: { none: {} } },
+  });
+
+  if (deletableCount === 0 && assignedCount > 0) {
+    return { error: `All ${assignedCount} voter(s) are assigned to elections. Unassign them first.` };
+  }
+
+  await db.voter.deleteMany({
+    where: { elections: { none: {} } },
+  });
 
   const session = await getSession();
   await logAdminAction({
@@ -155,12 +246,26 @@ export async function deleteAllVoters() {
     severity: "ERROR",
     actorId: session?.adminId,
     actorName: session?.username,
-    detail: `Deleted all voters (${count} total)`,
-    metadata: { deletedCount: count },
+    detail: `Deleted ${deletableCount} voter(s)${assignedCount > 0 ? ` (skipped ${assignedCount} assigned)` : ""}`,
+    metadata: { deletedCount: deletableCount, skippedAssigned: assignedCount },
   });
 
+  await cleanupEmptySections();
   revalidatePath("/dashboard/voters");
-  return { success: true };
+  return {
+    success: true,
+    message: assignedCount > 0
+      ? `Deleted ${deletableCount} voter(s). Skipped ${assignedCount} assigned to elections.`
+      : undefined,
+  };
+}
+
+// ─── Section cleanup ────────────────────────────────────────────
+
+async function cleanupEmptySections() {
+  await db.section.deleteMany({
+    where: { voters: { none: {} } },
+  });
 }
 
 // ─── Spreadsheet import ─────────────────────────────────────────

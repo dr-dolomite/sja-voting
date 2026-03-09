@@ -255,6 +255,7 @@ export async function getElectionAssignedSections(electionId: string) {
   const assignedSectionIds = new Set(election.voters.map((v) => v.sectionId));
 
   const sections = await db.section.findMany({
+    where: { voters: { some: {} } },
     include: { _count: { select: { voters: true } } },
     orderBy: { name: "asc" },
   });

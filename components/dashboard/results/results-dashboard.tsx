@@ -50,7 +50,7 @@ const FALLBACK_COLORS = [
 
 const chartConfig = {
   login_activity: {
-    label: "User Logins",
+    label: "Voter Logins",
   },
   vote_activity: {
     label: "Votes Cast",
@@ -182,7 +182,7 @@ export function ResultsDashboard({ elections }: { elections: Election[] }) {
     const [electionResults, turnoutData, activityData] = await Promise.all([
       getElectionResults(selectedId),
       getSectionTurnout(),
-      getActivityOverTime(),
+      getActivityOverTime(selectedId),
     ]);
     setResults(electionResults);
     setTurnout(turnoutData);
@@ -198,7 +198,7 @@ export function ResultsDashboard({ elections }: { elections: Election[] }) {
       const [electionResults, turnoutData, activityData] = await Promise.all([
         getElectionResults(selectedId),
         getSectionTurnout(),
-        getActivityOverTime(),
+        getActivityOverTime(selectedId),
       ]);
       if (!cancelled) {
         setResults(electionResults);

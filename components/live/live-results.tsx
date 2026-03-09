@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Crown, Vote } from "lucide-react";
+import { Vote } from "lucide-react";
 
 import { getElectionResults, getSectionTurnout } from "@/actions/results";
 import { Card } from "../ui/card";
@@ -50,71 +50,6 @@ const GRADIENT_PAIRS = [
   ["#ef4444", "#f87171"],
   ["#06b6d4", "#22d3ee"],
 ];
-
-/* ------------------------------------------------------------------ */
-/*  Turnout Ring                                                       */
-/* ------------------------------------------------------------------ */
-
-function TurnoutRing({
-  percent,
-  size = 180,
-  strokeWidth = 14,
-}: {
-  percent: number;
-  size?: number;
-  strokeWidth?: number;
-}) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (percent / 100) * circumference;
-  const center = size / 2;
-
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle
-          cx={center}
-          cy={center}
-          r={radius}
-          fill="none"
-          stroke="hsl(var(--muted))"
-          strokeWidth={strokeWidth}
-          opacity={0.3}
-        />
-        <circle
-          cx={center}
-          cy={center}
-          r={radius}
-          fill="none"
-          stroke="url(#turnoutGradient)"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className="transition-all duration-1000 ease-out"
-        />
-        <defs>
-          <linearGradient
-            id="turnoutGradient"
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="100%"
-          >
-            <stop offset="0%" stopColor="#6366f1" />
-            <stop offset="100%" stopColor="#a78bfa" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-4xl font-bold tabular-nums">{percent}%</span>
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">
-          Turnout
-        </span>
-      </div>
-    </div>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Position Carousel                                                  */
@@ -394,7 +329,7 @@ function ImagePreloader({ results }: { results: ElectionResult }) {
 
   return (
     <div
-      className="pointer-events-none fixed -left-[9999px] -top-[9999px] size-0 overflow-hidden"
+      className="pointer-events-none fixed -left-2499.75 -top-2499.75 size-0 overflow-hidden"
       aria-hidden="true"
     >
       {urls.map((url) => (

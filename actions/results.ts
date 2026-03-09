@@ -125,23 +125,31 @@ export async function getSectionTurnout() {
 }
 
 /** Get votes and voter-login counts grouped by date for the activity chart. */
-export async function getActivityOverTime() {
-  // Votes per day from the Vote table
+export async function getActivityOverTime(electionId: string) {
+  // Votes per day scoped to this election
   const voteRows = await db.$queryRaw<{ date: string; count: bigint }[]>(
     Prisma.sql`
-      SELECT DATE("createdAt") AS date, COUNT(*)::bigint AS count
-      FROM "Vote"
-      GROUP BY DATE("createdAt")
+      SELECT DATE(v."createdAt") AS date, COUNT(*)::bigint AS count
+      FROM "Vote" v
+      JOIN "Candidate" c ON v."candidateId" = c."id"
+      JOIN "Position" p ON c."positionId" = p."id"
+      WHERE p."electionId" = ${electionId}
+      GROUP BY DATE(v."createdAt")
       ORDER BY date
     `,
   );
 
-  // Successful voter logins per day from AuditLog
+  // Successful voter logins scoped to this election's assigned voters
+  // If no voters are assigned, show all voter logins
   const loginRows = await db.$queryRaw<{ date: string; count: bigint }[]>(
     Prisma.sql`
       SELECT DATE("timestamp") AS date, COUNT(*)::bigint AS count
       FROM "AuditLog"
       WHERE "action" = 'VOTER_LOGIN_SUCCESS'
+      AND (
+        (SELECT COUNT(*) FROM "_ElectionVoters" WHERE "A" = ${electionId}) = 0
+        OR "actorId" IN (SELECT "B" FROM "_ElectionVoters" WHERE "A" = ${electionId})
+      )
       GROUP BY DATE("timestamp")
       ORDER BY date
     `,

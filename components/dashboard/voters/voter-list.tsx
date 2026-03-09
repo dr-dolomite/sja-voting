@@ -9,11 +9,13 @@ import {
   Trash2,
   Upload,
   Trash,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -59,7 +61,9 @@ import {
   createVoter,
   updateVoter,
   deleteVoter,
+  deleteVoters,
   deleteAllVoters,
+  resetVoterVote,
   importVoters,
 } from "@/actions/voters";
 
@@ -94,11 +98,14 @@ export function VoterList({
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteAllOpen, setDeleteAllOpen] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [resetVoteOpen, setResetVoteOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState<Voter | null>(null);
   const [loading, setLoading] = useState(false);
   const [filterSection, setFilterSection] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importPreview, setImportPreview] = useState<
     { lrn: string; section: string; gradeLevel: string }[] | null
@@ -112,6 +119,35 @@ export function VoterList({
       v.section.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchSection && matchSearch;
   });
+
+  const allFilteredSelected =
+    filteredVoters.length > 0 &&
+    filteredVoters.every((v) => selectedIds.has(v.id));
+
+  function toggleSelectAll() {
+    if (allFilteredSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const v of filteredVoters) next.delete(v.id);
+        return next;
+      });
+    } else {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        for (const v of filteredVoters) next.add(v.id);
+        return next;
+      });
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   async function handleCreate(formData: FormData) {
     setLoading(true);
@@ -161,12 +197,50 @@ export function VoterList({
     router.refresh();
   }
 
-  async function handleDeleteAll() {
+  async function handleBulkDelete() {
     setLoading(true);
-    await deleteAllVoters();
+    const result = await deleteVoters([...selectedIds]);
     setLoading(false);
 
-    toast.success("All voters deleted.");
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success(`Deleted ${selectedIds.size} voter(s).`);
+    setSelectedIds(new Set());
+    setBulkDeleteOpen(false);
+    router.refresh();
+  }
+
+  async function handleResetVote() {
+    if (!selected) return;
+    setLoading(true);
+    const result = await resetVoterVote(selected.id);
+    setLoading(false);
+
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success(`Vote reset for ${selected.lrn}.`);
+    setResetVoteOpen(false);
+    setSelected(null);
+    router.refresh();
+  }
+
+  async function handleDeleteAll() {
+    setLoading(true);
+    const result = await deleteAllVoters();
+    setLoading(false);
+
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    toast.success(result.message ?? "All voters deleted.");
     setDeleteAllOpen(false);
     router.refresh();
   }
@@ -266,7 +340,16 @@ export function VoterList({
           ))}
         </select>
         <div className="ml-auto flex gap-2">
-          {voters.length > 0 && (
+          {selectedIds.size > 0 && (
+            <Button
+              variant="destructive"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
+              <Trash2 className="size-4" />
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
+          {voters.length > 0 && selectedIds.size === 0 && (
             <Button
               variant="destructive"
               onClick={() => setDeleteAllOpen(true)}
@@ -310,6 +393,13 @@ export function VoterList({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allFilteredSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead>LRN</TableHead>
                 <TableHead>Section</TableHead>
                 <TableHead>Grade Level</TableHead>
@@ -322,6 +412,13 @@ export function VoterList({
             <TableBody>
               {filteredVoters.map((voter) => (
                 <TableRow key={voter.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(voter.id)}
+                      onCheckedChange={() => toggleSelect(voter.id)}
+                      aria-label={`Select ${voter.lrn}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono">{voter.lrn}</TableCell>
                   <TableCell>{voter.section.name}</TableCell>
                   <TableCell>{voter.section.gradeLevel}</TableCell>
@@ -370,6 +467,17 @@ export function VoterList({
                           <Pencil className="size-4" />
                           Edit
                         </DropdownMenuItem>
+                        {voter.hasVoted && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelected(voter);
+                              setResetVoteOpen(true);
+                            }}
+                          >
+                            <RotateCcw className="size-4" />
+                            Reset Vote
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           variant="destructive"
                           onClick={() => {
@@ -543,6 +651,57 @@ export function VoterList({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => {
+          setBulkDeleteOpen(open);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Selected Voters</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selectedIds.size} selected
+              voter(s)? This action cannot be undone. Voters assigned to
+              elections cannot be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={loading}>
+              {loading ? "Deleting…" : `Delete ${selectedIds.size} Voter(s)`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Vote Confirmation */}
+      <AlertDialog
+        open={resetVoteOpen}
+        onOpenChange={(open) => {
+          setResetVoteOpen(open);
+          if (!open) setSelected(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Vote</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reset the vote for LRN &quot;
+              {selected?.lrn}&quot;? Their vote(s) will be deleted and they will
+              be able to vote again. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetVote} disabled={loading}>
+              {loading ? "Resetting…" : "Reset Vote"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Delete All Confirmation */}
       <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
         <AlertDialogContent>
@@ -550,8 +709,8 @@ export function VoterList({
             <AlertDialogTitle>Delete All Voters</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete all {voters.length} voter(s)? This
-              will remove all voter records and their vote history. This action
-              cannot be undone.
+              will remove all voter records and their vote history. Voters
+              assigned to elections will be skipped. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
