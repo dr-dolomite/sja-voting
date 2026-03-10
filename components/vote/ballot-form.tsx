@@ -520,7 +520,7 @@ export function BallotForm({ election }: { election: Election }) {
                 )}
               </div>
             </DialogTitle>
-            <DialogDescription className="whitespace-pre-wrap pt-2">
+            <DialogDescription className="whitespace-pre-wrap pt-2 text-pretty text-lg text-foreground font-medium">
               {descCandidate?.description}
             </DialogDescription>
           </DialogHeader>

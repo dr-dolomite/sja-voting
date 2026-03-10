@@ -4,6 +4,17 @@ import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { logAdminAction } from "@/lib/logger";
+import { unlink } from "fs/promises";
+import { join } from "path";
+
+async function deleteLocalImage(imageUrl: string | null | undefined) {
+  if (!imageUrl?.startsWith("/uploads/candidates/")) return;
+  try {
+    await unlink(join(process.cwd(), "public", imageUrl));
+  } catch {
+    // File already gone — ignore
+  }
+}
 
 // ─── Queries ────────────────────────────────────────────────────
 
@@ -80,6 +91,12 @@ export async function updateCandidate(formData: FormData) {
   if (!partylistId) return { error: "Partylist is required." };
 
   const existing = await db.candidate.findUnique({ where: { id } });
+
+  // If the image is being replaced, delete the old local file
+  if (existing?.imageUrl !== imageUrl) {
+    await deleteLocalImage(existing?.imageUrl);
+  }
+
   await db.candidate.update({
     where: { id },
     data: { fullName, description, imageUrl, positionId, partylistId },
@@ -112,6 +129,7 @@ export async function deleteCandidates(ids: string[]) {
 
   try {
     await db.candidate.deleteMany({ where: { id: { in: ids } } });
+    await Promise.all(candidates.map((c) => deleteLocalImage(c.imageUrl)));
 
     const session = await getSession();
     await logAdminAction({
@@ -141,6 +159,7 @@ export async function deleteCandidate(id: string) {
   });
   try {
     await db.candidate.delete({ where: { id } });
+    await deleteLocalImage(candidate?.imageUrl);
 
     const session = await getSession();
     await logAdminAction({

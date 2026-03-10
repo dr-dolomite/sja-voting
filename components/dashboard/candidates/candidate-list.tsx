@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Plus, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Plus, Pencil, Trash2, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -107,6 +107,9 @@ export function CandidateList({
   const [loading, setLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [createImageUrl, setCreateImageUrl] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Filters
   const [filterElection, setFilterElection] = useState("");
@@ -139,7 +142,33 @@ export function CandidateList({
   function openEdit(candidate: Candidate) {
     setSelected(candidate);
     setFormElectionId(candidate.position.election.id);
+    setEditImageUrl(candidate.imageUrl ?? "");
     setEditOpen(true);
+  }
+
+  async function handleImageUpload(
+    file: File,
+    setUrl: (url: string) => void,
+  ) {
+    setUploadingImage(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch("/api/upload/candidate-image", {
+        method: "POST",
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        toast.error(data.error ?? "Upload failed.");
+      } else {
+        setUrl(data.url);
+      }
+    } catch {
+      toast.error("Upload failed.");
+    } finally {
+      setUploadingImage(false);
+    }
   }
 
   // ── Handlers ────────────────────────────────────────────────
@@ -156,6 +185,7 @@ export function CandidateList({
 
     toast.success("Candidate added.");
     setCreateOpen(false);
+    setCreateImageUrl("");
     router.refresh();
   }
 
@@ -244,13 +274,17 @@ export function CandidateList({
 
   // ── Shared form fields ──────────────────────────────────────
 
-  function renderFormFields(defaults?: {
-    fullName: string;
-    description: string | null;
-    imageUrl: string | null;
-    positionId: string;
-    partylistId: string;
-  }) {
+  function renderFormFields(
+    defaults: {
+      fullName: string;
+      description: string | null;
+      imageUrl: string | null;
+      positionId: string;
+      partylistId: string;
+    } | undefined,
+    imageUrl: string,
+    setImageUrl: (url: string) => void,
+  ) {
     return (
       <div className="space-y-4 py-4">
         <div className="space-y-2">
@@ -280,14 +314,60 @@ export function CandidateList({
 
         <div className="space-y-2">
           <Label htmlFor="cand-image">
-            Image URL <span className="text-muted-foreground">(optional)</span>
+            Image <span className="text-muted-foreground">(optional)</span>
           </Label>
-          <Input
-            id="cand-image"
-            name="imageUrl"
-            placeholder="https://…"
-            defaultValue={defaults?.imageUrl ?? ""}
-          />
+          {/* Hidden input submits the value with the form */}
+          <input type="hidden" name="imageUrl" value={imageUrl} />
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={uploadingImage}
+              onClick={() => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/jpeg,image/png,image/webp";
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) handleImageUpload(file, setImageUrl);
+                };
+                input.click();
+              }}
+            >
+              {uploadingImage ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Upload className="size-4" />
+              )}
+              Upload
+            </Button>
+            <Input
+              id="cand-image"
+              placeholder="https://… or upload above"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              disabled={uploadingImage}
+            />
+          </div>
+          {imageUrl && (
+            <div className="flex items-center gap-2">
+              <Image
+                src={imageUrl}
+                alt="Preview"
+                width={40}
+                height={40}
+                className="size-10 rounded-full object-cover border"
+              />
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-destructive"
+                onClick={() => setImageUrl("")}
+              >
+                Remove
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -549,7 +629,7 @@ export function CandidateList({
             </DialogDescription>
           </DialogHeader>
           <form action={handleCreate}>
-            {renderFormFields()}
+            {renderFormFields(undefined, createImageUrl, setCreateImageUrl)}
             <DialogFooter>
               <Button type="submit" disabled={loading}>
                 {loading ? "Adding…" : "Add Candidate"}
@@ -564,7 +644,7 @@ export function CandidateList({
         open={editOpen}
         onOpenChange={(open) => {
           setEditOpen(open);
-          if (!open) setSelected(null);
+          if (!open) { setSelected(null); setEditImageUrl(""); }
         }}
       >
         <DialogContent className="max-w-lg">
@@ -584,6 +664,8 @@ export function CandidateList({
                     partylistId: selected.partylistId,
                   }
                 : undefined,
+              editImageUrl,
+              setEditImageUrl,
             )}
             <DialogFooter>
               <Button type="submit" disabled={loading}>
