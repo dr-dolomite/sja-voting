@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken, verifyVoterToken, signToken } from "@/lib/auth";
+import { verifyToken, verifyVoterToken, signToken, cookieOptions } from "@/lib/auth";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -32,13 +32,7 @@ export async function proxy(request: NextRequest) {
       username: session.username,
     });
     const response = NextResponse.next();
-    response.cookies.set("session", newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60, // 1 hour
-    });
+    response.cookies.set("session", newToken, cookieOptions(60 * 60));
     return response;
   }
 

@@ -73,4 +73,17 @@ export async function getVoterSession(): Promise<VoterSessionPayload | null> {
   return verifyVoterToken(token);
 }
 
+export function cookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure:
+      process.env.COOKIE_SECURE === "true" ||
+      (process.env.COOKIE_SECURE === undefined &&
+        process.env.NODE_ENV === "production"),
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge,
+  };
+}
+
 export { VOTER_COOKIE };

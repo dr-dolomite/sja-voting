@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { signToken, getSession } from "@/lib/auth";
+import { signToken, getSession, cookieOptions } from "@/lib/auth";
 import { compare } from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -53,13 +53,7 @@ export async function loginAction(
   const cookieStore = await cookies();
   // Clear any active voter session (mutually exclusive logins)
   cookieStore.delete("voter-session");
-  cookieStore.set("session", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60, // 1 hour (rolling session extends this in proxy.ts)
-  });
+  cookieStore.set("session", token, cookieOptions(60 * 60));
 
   await logAdminAction({
     action: "ADMIN_LOGIN_SUCCESS",

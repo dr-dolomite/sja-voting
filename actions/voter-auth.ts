@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { signVoterToken, getVoterSession, VOTER_COOKIE } from "@/lib/auth";
+import { signVoterToken, getVoterSession, VOTER_COOKIE, cookieOptions } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { logVoterAction } from "@/lib/logger";
@@ -69,13 +69,7 @@ export async function voterLoginAction(
   const cookieStore = await cookies();
   // Clear any active admin session (mutually exclusive logins)
   cookieStore.delete("session");
-  cookieStore.set(VOTER_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 4, // 4 hours
-  });
+  cookieStore.set(VOTER_COOKIE, token, cookieOptions(60 * 60 * 4));
 
   await logVoterAction({
     action: "VOTER_LOGIN_SUCCESS",
