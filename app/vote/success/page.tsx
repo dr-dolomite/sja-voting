@@ -16,18 +16,15 @@ export default function VoteSuccessPage() {
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          router.replace("/vote/login");
-          return 0;
-        }
-        return prev - 1;
-      });
+    if (countdown <= 0) {
+      router.replace("/vote/login");
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1);
     }, 1000);
-    return () => clearInterval(timer);
-  }, [router]);
+    return () => clearTimeout(timer);
+  }, [countdown, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
