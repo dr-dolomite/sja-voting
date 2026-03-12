@@ -47,7 +47,7 @@ export async function voterLoginAction(
   // Check if there's an active election
   const activeElection = await db.election.findFirst({
     where: { isActive: true },
-    select: { id: true, _count: { select: { voters: true } } },
+    select: { id: true },
   });
 
   if (!activeElection) {
@@ -62,25 +62,23 @@ export async function voterLoginAction(
     return { error: "No active election at this time." };
   }
 
-  // If election has assigned voters, check this voter is one of them
-  if (activeElection._count.voters > 0) {
-    const isAssigned = await db.election.findFirst({
-      where: {
-        id: activeElection.id,
-        voters: { some: { id: voter.id } },
-      },
+  // Check this voter is assigned to the active election
+  const isAssigned = await db.election.findFirst({
+    where: {
+      id: activeElection.id,
+      voters: { some: { id: voter.id } },
+    },
+  });
+  if (!isAssigned) {
+    await logVoterAction({
+      action: "VOTER_LOGIN_NOT_ASSIGNED",
+      category: "AUTH",
+      severity: "WARNING",
+      actorId: voter.id,
+      actorName: voter.lrn,
+      detail: `Voter LRN "${voter.lrn}" (${voter.section.name}) not assigned to active election`,
     });
-    if (!isAssigned) {
-      await logVoterAction({
-        action: "VOTER_LOGIN_NOT_ASSIGNED",
-        category: "AUTH",
-        severity: "WARNING",
-        actorId: voter.id,
-        actorName: voter.lrn,
-        detail: `Voter LRN "${voter.lrn}" (${voter.section.name}) not assigned to active election`,
-      });
-      return { error: "You are not eligible to vote in the current election." };
-    }
+    return { error: "You are not eligible to vote in the current election." };
   }
 
   const token = await signVoterToken({
