@@ -364,34 +364,32 @@ export function BallotForm({ election }: { election: Election }) {
   // ── Main render ────────────────────────────────────────────
 
   return (
-    <div className="mx-auto px-24 max-w-screen space-y-6 p-8">
-      {/* Header */}
-      <div className="grid gap-4">
-        <div className="flex justify-start items-center gap-x-8">
-          <Image
-            src="/sja-logo.webp"
-            alt="SJA Logo"
-            width={100}
-            height={100}
-            className="size-32 object-contain"
-          />
+    <div className="flex h-dvh flex-col">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-24 space-y-6 p-8">
+        {/* Header */}
+        <div className="grid gap-4">
+          <div className="flex justify-start items-center gap-x-8">
+            <Image
+              src="/sja-logo.webp"
+              alt="SJA Logo"
+              width={100}
+              height={100}
+              className="size-32 object-contain"
+            />
 
-          <div className="grid gap-0.5">
-            <h1 className="text-3xl font-bold">{election.name}</h1>
-            {/* <p className="mt-1 text-md text-muted-foreground">
-            Step {page + 1} of {totalPages}
-            {isReviewPage ? " — Review" : ` — ${election.positions[page].name}`}
-          </p> */}
-            <p className="max-w-240">
-              St. Joseph&apos;s Academy of Malinao, Inc. Student Council
-              Election for SY 2026-2027.
-            </p>
+            <div className="grid gap-0.5">
+              <h1 className="text-3xl font-bold">{election.name}</h1>
+              <p className="max-w-240">
+                St. Joseph&apos;s Academy of Malinao, Inc. Student Council
+                Election for SY 2026-2027.
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Instructions */}
-        {/* Only show at the beginning of the ballot */}
-        {page === 0 && (
+          {/* Instructions */}
+          {/* Only show at the beginning of the ballot */}
+          {page === 0 && (
           <div className="rounded-lg bg-primary/5 p-4 text-sm text-black/90">
             <h2 className="mb-2 text-lg font-bold">Instructions</h2>
             <ol className="list-inside space-y-1 text-md font-medium">
@@ -414,13 +412,14 @@ export function BallotForm({ election }: { election: Election }) {
         )}
       </div>
 
-      {/* Current page content */}
-      {isReviewPage
-        ? renderReviewPage()
-        : renderPositionPage(election.positions[page])}
+        {/* Current page content */}
+        {isReviewPage
+          ? renderReviewPage()
+          : renderPositionPage(election.positions[page])}
+      </div>
 
-      {/* Bottom navigation bar with progress */}
-      <div className="fixed inset-x-0 bottom-0 border-t bg-background">
+      {/* Bottom navigation bar */}
+      <div className="shrink-0 border-t bg-background">
         <Progress value={progressPercent} className="h-1.5 rounded-none" />
         <div className="mx-auto flex max-w-4xl items-center justify-between p-2">
           <Button
@@ -520,7 +519,7 @@ export function BallotForm({ election }: { election: Election }) {
                 )}
               </div>
             </DialogTitle>
-            <DialogDescription className="whitespace-pre-wrap pt-2 text-pretty text-lg text-foreground font-medium">
+            <DialogDescription className="whitespace-pre-wrap pt-2">
               {descCandidate?.description}
             </DialogDescription>
           </DialogHeader>
